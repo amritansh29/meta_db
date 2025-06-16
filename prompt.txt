@@ -1,0 +1,131 @@
+Hi! I’m starting a fresh conversation for my project to manage and extract DICOM metadata for research purposes.
+Please remember and use the following details throughout the project:
+
+---
+
+## ✅ Project Goal:
+Build a modular FastAPI + MongoDB application that:
+- Allows researchers to define DICOM "jobs" (by accession numbers -> to be implemented by someone else but here to provide scope)
+- Extracts DICOM metadata from a mounted archive (/usr/local/share/LIDC-IDRI-DICOM/)
+- Inserts the data into a MongoDB database with proper hierarchy
+- Supports APIs for managing researchers, collections, studies, series, and instances
+- Querying to filter based on studies and series level parameters
+- Dashboard to explore extracted metadata
+
+---
+
+## 🗂 Folder Structure I want:
+
+meta_db/
+├── db_api/ # FastAPI app
+│ ├── db.py
+│ ├── main.py
+│ ├── models.py
+│ └── routes.py
+├── meta_extractor/ # Python code to walk DICOM files and extract metadata
+│ └── extractor.py
+├── driver.py # Orchestrates extraction + insert
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+
+
+
+---
+
+## 🧬 MongoDB Schema:
+
+### 🧑 researchers
+```json
+{
+  "_id": ObjectId(),
+  "researcher_id": "r12345",
+  "name": "Dr. Alice Lee",
+  "email": "alice@example.org",
+  "jobs": [ObjectId("...")],
+  "created_at": ISODate("..."),
+  "updated_at": ISODate("...")
+}
+📁 collections
+json
+Copy
+{
+  "_id": ObjectId(),
+  "name": "LIDC-IDRI",
+  "description": "Lung Imaging Data Consortium",
+  "cases": [
+    {
+      "case_id": "CASE001",
+      "patient_id": "PATIENT0001",
+      "accession_numbers": ["ACC123", "ACC124"]
+    }
+  ],
+  "created_at": ISODate("..."),
+  "updated_at": ISODate("...")
+}
+🧪 studies
+json
+Copy
+{
+  "_id": ObjectId(),
+  "study_instance_uid": "1.2.840...",
+  "accession_number": "ACC123",
+  "patient_id": "PATIENT0001",
+  "study_date": "20250101",
+  "metadata": {
+    "Modality": "MR",
+    "StudyDescription": "Brain MRI"
+  },
+  "collection_ids": [ObjectId("...")],
+  "series": [
+    {
+      "series_id": ObjectId("..."),
+      "series_instance_uid": "1.2.840...2001",
+      "series_number": 1,
+      "series_description": "AX T1",
+      "modality": "MR"
+    }
+  ]
+}
+📷 series
+json
+Copy
+{
+  "_id": ObjectId(),
+  "series_instance_uid": "1.2.840...2001",
+  "study_id": ObjectId("..."),
+  "accession_number": "ACC123",
+  "series_number": 1,
+  "metadata": {
+    "Modality": "CT",
+    "BodyPartExamined": "CHEST"
+  },
+  "num_instances": 20,
+  "collection_ids": [ObjectId("...")],
+  "instances": [ObjectId("...")],
+  "_search_text": "CT CHEST High-res axial HFS",
+  "embeddings_id": null
+}
+
+
+json
+Copy
+{
+  "_id": ObjectId(),
+  "sop_instance_uid": "1.2.840...",
+  "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+  "acquisition_datetime": "20250101T133000",
+  "instance_number": 1,
+  "series_id": ObjectId("..."),
+  "created_at": ISODate("..."),
+  "updated_at": ISODate("...")
+}
+
+
+Current Repo for Reference:
+https://github.com/amritansh29/meta_db
+
+Please help me build or revise code, structure, or pipeline logic with this as the foundation.
+
+
+---
