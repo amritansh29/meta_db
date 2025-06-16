@@ -1,0 +1,115 @@
+Researcher colelction
+{
+  "_id": ObjectId(),
+  "researcher_id": "r12345",            // human-friendly researcher ID
+  "name": "Dr. Alice Lee",
+  "email": "alice@example.org",
+  "jobs": [ObjectId("...")],           // references to researcher jobs
+  "created_at": ISODate("..."),
+  "updated_at": ISODate("...")
+}
+
+Collections collection:
+{
+  "_id": ObjectId(),
+  "name": "LIDC-IDRI",
+  "description": "Lung Imaging Data Consortium",
+  "cases": [  // researcher-assigned cases
+    {
+      case_id: "CASE001", //from manifest
+      patient_id:"PATIENT0001",  
+      accession_numbers: ["ACC123","ACC124"]
+    } 
+  ]
+  "created_at": ISODate("..."),
+  "updated_at": ISODate("...")
+}
+
+Studies collection:
+
+{
+  _id: ObjectId(),
+  study_instance_uid: "1.2.840.113619.…",
+  accession_number: "ACC123",
+  patient_id: "PATIENT0001",
+  study_date: "20250101",
+
+  // DICOM extracted tags (index frequently filtered fields)
+  metadata: {
+    Modality:         "MR",
+    StudyDescription: "Brain MRI",
+    …  
+  },
+
+  // which collections referenced this study
+  collection_ids:[ ObjectId("C1"), ObjectId("C2") ],
+
+  // shallow summary of series for quick Dashboard UI render
+  series: [
+    {
+      series_id:           ObjectId("…"),
+      series_instance_uid: "1.2.840.113619.…2001",
+      series_number:       1,
+      series_description:  "AX T1",
+      modality:            "MR"
+    },
+    …  
+  ]
+}
+
+
+Series Collection:
+{
+  _id: ObjectId(),
+  series_instance_uid:"1.2.840.113619...2001", 
+  study_id:ObjectId("…"),  // → studies._id
+  accession_number:"ACC123",
+  series_number:1,
+
+  metadata: {
+    Modality:"CT",
+    BodyPartExamined:"CHEST",
+    // … other tags
+  },
+
+  num_instances: 20,
+  collection_ids: [ ObjectId("…"), … ],      // same as studies
+  "instances": [ObjectId("...")],
+
+
+  // for natural-language later:
+  _search_text:"CT CHEST High-res axial HFS", 
+  embeddings_id:null, // pointer to stored vector
+}
+
+
+Instance collection:
+{
+  "_id": ObjectId(),
+  "sop_instance_uid": "1.2.840...",
+  "sop_class_uid": "1.2.840.10008.5.1.4.1.1.2",
+  "acquisition_datetime": "20250101T133000",
+  "instance_number": 1,
+  "series_id": ObjectId("..."),
+  "created_at": ISODate("..."),
+  "updated_at": ISODate("...")
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

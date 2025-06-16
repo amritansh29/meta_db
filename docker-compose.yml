@@ -28,7 +28,9 @@ services:
       - MONGO_URL=mongodb://mongo:27017
     depends_on:
       - mongo
-    command: ["uvicorn", "db_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    volumes:
+      - .:/app
+    command: ["uvicorn", "db_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 volumes:
   mongo-data:
