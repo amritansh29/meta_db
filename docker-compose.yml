@@ -37,6 +37,7 @@ services:
     container_name: metadata-driver
     volumes:
       - .:/app
+      - /usr/local/share/LIDC-IDRI-DICOM:/usr/local/share/LIDC-IDRI-DICOM
     command: ["python", "driver.py"]
     depends_on:
       - db-api

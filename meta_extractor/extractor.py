@@ -3,9 +3,9 @@ import pydicom
 from collections import defaultdict
 
 # --- Configuration ---
-TAGS_CONF_FILE_STUDY = "/home/amritansh/Desktop/meta_store/meta_db/meta_extractor/conf/StudyFeatures.txt"
-TAGS_CONF_FILE_SERIES = "/home/amritansh/Desktop/meta_store/meta_db/meta_extractor/conf/SeriesFeatures.txt"
-TAGS_CONF_FILE_INSTANCE = "/home/amritansh/Desktop/meta_store/meta_db/meta_extractor/conf/InstanceFeatures.txt"
+TAGS_CONF_FILE_STUDY = "meta_extractor/conf/StudyFeatures.txt"
+TAGS_CONF_FILE_SERIES = "meta_extractor/conf/SeriesFeatures.txt"
+TAGS_CONF_FILE_INSTANCE = "meta_extractor/conf/InstanceFeatures.txt"
 PATIENT_DIR = "/usr/local/share/LIDC-IDRI-DICOM/LIDC-IDRI-0001"
 MONGO_URI = "mongodb://admin:adminpass@mongo:27017/"
 DB_NAME = "dicomdb"
@@ -31,7 +31,16 @@ def load_tags(conf_path):
 
 # return a dictionary of dicom tag:value from dcm and list of tags
 def extract_tags(dcm, tags):
-    return {tag: getattr(dcm, tag, "DOES NOT EXIST") for tag in tags}
+    def safe_convert(value): #Convert dicom objects to str for json 
+        try:
+            if isinstance(value, (list, pydicom.multival.MultiValue)):
+                return [str(v) for v in value]
+            return str(value)
+        except Exception:
+            return None
+
+    return {tag: safe_convert(getattr(dcm, tag, None)) for tag in tags}
+
 
 
 # yield every .dcm file in the directory
