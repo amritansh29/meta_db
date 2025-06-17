@@ -3,9 +3,9 @@ import pydicom
 from collections import defaultdict
 
 # --- Configuration ---
-TAGS_CONF_FILE_STUDY = "/home/amritansh/Desktop/meta_store/app/conf/StudyFeatures.txt"
-TAGS_CONF_FILE_SERIES = "/home/amritansh/Desktop/meta_store/app/conf/SeriesFeatures.txt"
-TAGS_CONF_FILE_INSTANCE = "/home/amritansh/Desktop/meta_store/app/conf/InstanceFeatures.txt"
+TAGS_CONF_FILE_STUDY = "/home/amritansh/Desktop/meta_store/meta_db/meta_extractor/conf/StudyFeatures.txt"
+TAGS_CONF_FILE_SERIES = "/home/amritansh/Desktop/meta_store/meta_db/meta_extractor/conf/SeriesFeatures.txt"
+TAGS_CONF_FILE_INSTANCE = "/home/amritansh/Desktop/meta_store/meta_db/meta_extractor/conf/InstanceFeatures.txt"
 PATIENT_DIR = "/usr/local/share/LIDC-IDRI-DICOM/LIDC-IDRI-0001"
 MONGO_URI = "mongodb://admin:adminpass@mongo:27017/"
 DB_NAME = "dicomdb"

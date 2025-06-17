@@ -32,5 +32,14 @@ services:
       - .:/app
     command: ["uvicorn", "db_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
+  driver:
+    build: .
+    container_name: metadata-driver
+    volumes:
+      - .:/app
+    command: ["python", "driver.py"]
+    depends_on:
+      - db-api
+
 volumes:
   mongo-data:
