@@ -3,5 +3,6 @@ fastapi
 uvicorn[standard]
 motor
 pydantic[email]
+httpx
 
 

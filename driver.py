@@ -2,7 +2,7 @@ import asyncio
 import httpx
 from meta_extractor.extractor import extract_metadata
 
-BASE_URL = "http://localhost:8000"  # Update if running on a different host/port
+BASE_URL = "http://db-api:8000"
 
 # --- Helpers ---
 async def post(session, path, payload):
