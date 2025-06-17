@@ -78,34 +78,70 @@ def extract_metadata():
             
 
 
-             # --- Study-level (accumulate tags) ---
-            new_study_data = extract_tags(dcm, study_tags)
+             # Study (accumulate)
+            study_meta = extract_tags(dcm, study_tags)
             if study_uid not in studies:
-                studies[study_uid] = new_study_data
+                studies[study_uid] = {"metadata": study_meta}
             else:
-                merge_tags(studies[study_uid], new_study_data)
+                merge_tags(studies[study_uid]["metadata"], study_meta)
 
-            # --- Series-level (accumulate tags) ---
-            new_series_data = extract_tags(dcm, series_tags)
+            # Series (accumulate)
+            series_meta = extract_tags(dcm, series_tags)
             if series_uid not in series_data:
-                series_data[series_uid] = {
-                    "study_uid": study_uid,
-                    "metadata": new_series_data
-                }
+                series_data[series_uid] = {"study_uid": study_uid, "metadata": series_meta}
             else:
-                merge_tags(series_data[series_uid]["metadata"], new_series_data)
+                merge_tags(series_data[series_uid]["metadata"], series_meta)
 
-            # --- Instance-level (per file) ---
+            # Instance (one per file)
+            instance_meta = extract_tags(dcm, instance_tags)
             instances[series_uid].append({
-                "instance_uid": instance_uid,
-                "file_path": fpath,
-                "metadata": extract_tags(dcm, instance_tags)
+                "sop_instance_uid": instance_uid,
+                "series_instance_uid": series_uid,
+                "metadata": instance_meta
             })
 
         except Exception as e:
             print(f"Failed to read {fpath}: {e}")
 
-    return studies, series_data, instances
+    
+    #Formatting data for inserting into DB:
+
+    structured_studies = []
+    for uid, data in studies.items():
+        out = {"study_instance_uid": uid}
+        for k in STUDY_PROMOTED:
+            out[k.lower()] = data["metadata"].get(k)
+        out["metadata"] = data["metadata"]
+        structured_studies.append(out)
+
+    structured_series = []
+    for uid, data in series_data.items():
+        out = {
+            "series_instance_uid": uid,
+            "study_instance_uid": data["study_uid"]
+        }
+        for k in SERIES_PROMOTED:
+            out[k.lower()] = data["metadata"].get(k)
+        out["metadata"] = data["metadata"]
+        structured_series.append(out)
+
+    structured_instances = []
+    for series_uid, inst_list in instances.items():
+        for inst in inst_list:
+            out = {
+                "sop_instance_uid": inst["sop_instance_uid"],
+                "series_instance_uid": inst["series_instance_uid"]
+            }
+            for k in INSTANCE_PROMOTED:
+                out[k.lower()] = inst["metadata"].get(k)
+            out["metadata"] = inst["metadata"]
+            structured_instances.append(out)
+
+    return {
+        "studies": structured_studies,
+        "series": structured_series,
+        "instances": structured_instances
+    }
 
 
     
