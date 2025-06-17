@@ -82,20 +82,35 @@ class StudyModel(BaseModel):
 
 class SeriesModel(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    series_instance_uid: str
     study_id: PyObjectId
     accession_number: Optional[str] = None
+
+    #promoted fields for indexing
+    series_instance_uid: str
     series_number: Optional[int] = None
-    metadata: dict = {}
-    collection_ids: List[PyObjectId] = []
-    instances: List[PyObjectId] = []
-    modality: Optional[str] = None
-    body_part_examined: Optional[str] = None
     series_description: Optional[str] = None
+    body_part_examined: Optional[str] = None
     series_date: Optional[str] = None
     series_time: Optional[str] = None
+    manufacturer: Optional[str] = None
+    manufacturer_model_name: Optional[str] = None
+    protocol_name: Optional[str] = None
+    kvp: Optional[float] = None
+    slice_thickness: Optional[float] = None
+    image_position_patient: Optional[List[float]] = None
+
+    metadata: dict = {}
+
+    # Links
+    collection_ids: List[PyObjectId] = []
+    instances: List[PyObjectId] = []
+    
+
+    # for natural-language later:
     _search_text: Optional[str] = None
     embeddings_id: Optional[str] = None
+
+    # timestamps
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -107,12 +122,19 @@ class SeriesModel(BaseModel):
 
 class InstanceModel(BaseModel):
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
-    sop_instance_uid: str
-    sop_class_uid: Optional[str] = None
-    acquisition_datetime: Optional[str] = None
-    instance_number: Optional[int] = None
+
     series_id: PyObjectId
     metadata: dict = {}
+    
+    #promoted fields
+    sop_instance_uid: str
+    sop_class_uid: Optional[str] = None
+    instance_number: Optional[int] = None
+    acquisition_datetime: Optional[str] = None
+    image_orientation: Optional[str] = None
+    image_position: Optional[str] = None
+
+    #timestamps 
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 

@@ -14,6 +14,13 @@ COLLECTION_NAME = "test"
 
 
 
+# Indexed fields to be promoted
+STUDY_PROMOTED = {"AccessionNumber", "StudyInstanceUID", "PatientID", "StudyDate", "StudyDescription", "Modality, AcquisitionDateTime"}
+SERIES_PROMOTED = {"SeriesInstanceUID", "SeriesNumber", "SeriesDescription", "BodyPartExamined", "SeriesDate", "SeriesTime", "Manufacturer", "ManufacturerModelName", "ProtocolName", "KVP", "SliceThickness", "ImagePositionPatient"}
+INSTANCE_PROMOTED = {"SOPInstanceUID", "SOPClassUID", "InstanceNumber", "AcquisitionDateTime", "ImageOrientation", "ImagePosition"}
+
+
+
 # --- Helpers ---
 
 # return list of tags listed in a .txt file
@@ -101,9 +108,7 @@ def extract_metadata():
     return studies, series_data, instances
 
 
-if __name__ == "__main__":
-    studies, series, instance = extract_metadata()
-    print(studies)
+    
 
     
 
