@@ -37,10 +37,12 @@ services:
     container_name: metadata-driver
     volumes:
       - .:/app
-      - /usr/local/share/LIDC-IDRI-DICOM:/usr/local/share/LIDC-IDRI-DICOM
-    command: ["python", "driver.py"]
+    command: sleep infinity
     depends_on:
       - db-api
+      - mongo
+      - mongo-express
+    tty: true
 
 volumes:
   mongo-data:

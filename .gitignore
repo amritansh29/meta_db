@@ -1,3 +1,5 @@
 ./prompt.txt
 __pycache__/
 *.pyc
+LIDC-IDRI-DICOM
+./venv/
