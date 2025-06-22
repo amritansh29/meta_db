@@ -1,5 +1,6 @@
-./prompt.txt
+prompt.txt
 __pycache__/
 *.pyc
 LIDC-IDRI-DICOM
-./venv/
+.DS_Store
+/venv/
