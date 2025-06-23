@@ -20,7 +20,8 @@ services:
       - mongo
 
   db-api:
-    build: .
+    build: 
+      context: db_api
     container_name: db-api
     ports:
       - "8000:8000"
@@ -29,20 +30,38 @@ services:
     depends_on:
       - mongo
     volumes:
-      - .:/app
-    command: ["uvicorn", "db_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+      - ./db_api/src:/app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
-  driver:
-    build: .
-    container_name: metadata-driver
+  extractor:
+    build: 
+      context: meta_extractor
+    container_name: extractor
     volumes:
-      - .:/app
+      - ./meta_extractor/src:/app
     command: sleep infinity
     depends_on:
       - db-api
-      - mongo
-      - mongo-express
     tty: true
+
+  frontend:
+    build:
+      context: frontend
+    container_name: frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/vite.config.js:/app/vite.config.js
+      - ./frontend/index.html:/app/index.html
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/package-lock.json:/app/package-lock.json
+    working_dir: /app
+    command: npm run dev
+    depends_on:
+      - db-api
+
 
 volumes:
   mongo-data:

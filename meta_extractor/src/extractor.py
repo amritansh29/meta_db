@@ -1,11 +1,12 @@
 import os
 import pydicom
+from pydicom.multival import MultiValue
 from collections import defaultdict
 
 # --- Configuration ---
-TAGS_CONF_FILE_STUDY = "meta_extractor/conf/StudyFeatures.txt"
-TAGS_CONF_FILE_SERIES = "meta_extractor/conf/SeriesFeatures.txt"
-TAGS_CONF_FILE_INSTANCE = "meta_extractor/conf/InstanceFeatures.txt"
+TAGS_CONF_FILE_STUDY = "conf/StudyFeatures.txt"
+TAGS_CONF_FILE_SERIES = "conf/SeriesFeatures.txt"
+TAGS_CONF_FILE_INSTANCE = "conf/InstanceFeatures.txt"
 PATIENT_DIR = "./LIDC-IDRI-DICOM/LIDC-IDRI-0001"
 MONGO_URI = "mongodb://admin:adminpass@mongo:27017/"
 DB_NAME = "dicomdb"
@@ -33,7 +34,7 @@ def load_tags(conf_path):
 def extract_tags(dcm, tags):
     def safe_convert(value): #Convert dicom objects to str for json 
         try:
-            if isinstance(value, (list, pydicom.multival.MultiValue)):
+            if isinstance(value, (list, MultiValue)):
                 return [str(v) for v in value]
             return str(value)
         except Exception:

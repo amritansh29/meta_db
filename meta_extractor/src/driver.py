@@ -1,6 +1,6 @@
 import asyncio
 import httpx
-from meta_extractor.extractor import extract_metadata
+from extractor import extract_metadata
 
 BASE_URL = "http://db-api:8000"
 

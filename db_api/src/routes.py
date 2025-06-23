@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pymongo.errors import PyMongoError
-from .models import ResearcherModel, CollectionModel, StudyModel, SeriesModel, InstanceModel
-from .db import get_db
+from models import ResearcherModel, CollectionModel, StudyModel, SeriesModel, InstanceModel
+from db import get_db
 from datetime import datetime, timezone
 from bson import ObjectId
 
@@ -195,8 +195,6 @@ async def get_series(series_id: str, db=Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
-
-from .models import InstanceModel
 
 @router.post(
     "/instances",
