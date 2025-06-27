@@ -39,6 +39,7 @@ services:
     container_name: extractor
     volumes:
       - ./meta_extractor/src:/app
+      - ./LIDC-IDRI-DICOM:/app/LIDC-IDRI-DICOM:ro
     command: sleep infinity
     depends_on:
       - db-api
