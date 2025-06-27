@@ -1,4 +1,4 @@
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Literal, Dict
 from pydantic import BaseModel, Field, EmailStr, GetCoreSchemaHandler
 from bson import ObjectId
 from pydantic_core import core_schema
@@ -141,5 +141,10 @@ class InstanceModel(BaseModel):
         populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
+
+
+class QueryRequest(BaseModel):
+    collection: Literal["studies", "series", "instances"]
+    query: Optional[Dict] = {}
 
 

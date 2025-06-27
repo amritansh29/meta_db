@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from pymongo.errors import PyMongoError
-from models import ResearcherModel, CollectionModel, StudyModel, SeriesModel, InstanceModel
+from models import ResearcherModel, CollectionModel, StudyModel, SeriesModel, InstanceModel, QueryRequest
 from db import get_db
 from datetime import datetime, timezone
 from bson import ObjectId
-
+import traceback
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
@@ -245,6 +246,15 @@ async def get_instance(instance_id: str, db=Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+def serialize_document(doc):
+    if isinstance(doc, dict):
+        return {k: serialize_document(v) for k, v in doc.items()}
+    elif isinstance(doc, list):
+        return [serialize_document(v) for v in doc]
+    elif isinstance(doc, ObjectId):
+        return str(doc)
+    else:
+        return doc
 
 @router.post("/query", summary="Query studies/series/instances collections")
 async def run_query(
@@ -259,16 +269,10 @@ async def run_query(
     try:
         cursor = db[collection].find(query).limit(100)
         results = await cursor.to_list(length=100)
-
-        # Convert ObjectIds to strings
-        for doc in results:
-            doc["_id"] = str(doc["_id"])
-            if "study_id" in doc and isinstance(doc["study_id"], ObjectId):
-                doc["study_id"] = str(doc["study_id"])
-            if "series_id" in doc and isinstance(doc["series_id"], ObjectId):
-                doc["series_id"] = str(doc["series_id"])
-
-        return results
+        return [serialize_document(doc) for doc in results]
 
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"MongoDB error: {str(e)}")
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": f"Exception: {str(e)}"})

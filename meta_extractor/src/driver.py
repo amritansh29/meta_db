@@ -22,7 +22,6 @@ async def run_driver():
     print("Extracting metadata...")
     extracted = extract_metadata()
     studies = extracted["studies"]
-    print("DONE")
     series = extracted["series"]
     instances = extracted["instances"]
 

@@ -7,7 +7,7 @@ from collections import defaultdict
 TAGS_CONF_FILE_STUDY = "conf/StudyFeatures.txt"
 TAGS_CONF_FILE_SERIES = "conf/SeriesFeatures.txt"
 TAGS_CONF_FILE_INSTANCE = "conf/InstanceFeatures.txt"
-PATIENT_DIR = "./LIDC-IDRI-DICOM/LIDC-IDRI-0001"
+PATIENT_DIR = "./LIDC-IDRI-DICOM"
 MONGO_URI = "mongodb://admin:adminpass@mongo:27017/"
 DB_NAME = "dicomdb"
 RESEARCHER_NAME = "test"
@@ -16,9 +16,40 @@ COLLECTION_NAME = "test"
 
 
 # Indexed fields to be promoted
-STUDY_PROMOTED = {"AccessionNumber", "StudyInstanceUID", "PatientID", "StudyDate", "StudyDescription", "Modality, AcquisitionDateTime"}
-SERIES_PROMOTED = {"SeriesInstanceUID", "SeriesNumber", "SeriesDescription", "BodyPartExamined", "SeriesDate", "SeriesTime", "Manufacturer", "ManufacturerModelName", "ProtocolName", "KVP", "SliceThickness", "ImagePositionPatient"}
-INSTANCE_PROMOTED = {"SOPInstanceUID", "SOPClassUID", "InstanceNumber", "AcquisitionDateTime", "ImageOrientation", "ImagePosition"}
+STUDY_PROMOTED_MAPPING = {
+    "AccessionNumber": "accession_number",
+    "StudyInstanceUID": "study_instance_uid",
+    "PatientID": "patient_id",
+    "StudyDate": "study_date",
+    "StudyDescription": "study_description",
+    "Modality": "modality",
+    "AcquisitionDateTime": "acquisition_datetime"
+}
+
+SERIES_PROMOTED_MAPPING = {
+    "SeriesInstanceUID": "series_instance_uid",
+    "SeriesNumber": "series_number",
+    "SeriesDescription": "series_description",
+    "BodyPartExamined": "body_part_examined",
+    "SeriesDate": "series_date",
+    "SeriesTime": "series_time",
+    "Manufacturer": "manufacturer",
+    "ManufacturerModelName": "manufacturer_model_name",
+    "ProtocolName": "protocol_name",
+    "KVP": "kvp",
+    "SliceThickness": "slice_thickness",
+    "ImagePositionPatient": "image_position_patient"
+}
+
+INSTANCE_PROMOTED_MAPPING = {
+    "SOPInstanceUID": "sop_instance_uid",
+    "SOPClassUID": "sop_class_uid",
+    "InstanceNumber": "instance_number",
+    "AcquisitionDateTime": "acquisition_datetime",
+    "ImageOrientation": "image_orientation",
+    "ImagePosition": "image_position"
+}
+
 
 
 
@@ -32,14 +63,16 @@ def load_tags(conf_path):
 
 # return a dictionary of dicom tag:value from dcm and list of tags
 def extract_tags(dcm, tags):
-    def safe_convert(value): #Convert dicom objects to str for json 
+    def safe_convert(value):
+        if value is None:
+            return None
+        if isinstance(value, (list, MultiValue)):
+            return [safe_convert(v) for v in value]
         try:
-            if isinstance(value, (list, MultiValue)):
-                return [str(v) for v in value]
-            return str(value)
+            return float(value) if isinstance(value, (int, float)) else str(value)
         except Exception:
             return None
-
+            
     return {tag: safe_convert(getattr(dcm, tag, None)) for tag in tags}
 
 
@@ -119,8 +152,8 @@ def extract_metadata():
     structured_studies = []
     for uid, data in studies.items():
         out = {"study_instance_uid": uid}
-        for k in STUDY_PROMOTED:
-            out[k.lower()] = data["metadata"].get(k)
+        for dicom_key, model_key in STUDY_PROMOTED_MAPPING.items():
+            out[model_key] = data["metadata"].get(dicom_key)
         out["metadata"] = data["metadata"]
         structured_studies.append(out)
 
@@ -130,8 +163,8 @@ def extract_metadata():
             "series_instance_uid": uid,
             "study_instance_uid": data["study_uid"]
         }
-        for k in SERIES_PROMOTED:
-            out[k.lower()] = data["metadata"].get(k)
+        for dicom_key, model_key in SERIES_PROMOTED_MAPPING.items():
+            out[model_key] = data["metadata"].get(dicom_key)
         out["metadata"] = data["metadata"]
         structured_series.append(out)
 
@@ -142,8 +175,8 @@ def extract_metadata():
                 "sop_instance_uid": inst["sop_instance_uid"],
                 "series_instance_uid": inst["series_instance_uid"]
             }
-            for k in INSTANCE_PROMOTED:
-                out[k.lower()] = inst["metadata"].get(k)
+            for dicom_key, model_key in INSTANCE_PROMOTED_MAPPING.items():
+                out[model_key] = inst["metadata"].get(dicom_key)
             out["metadata"] = inst["metadata"]
             structured_instances.append(out)
 
