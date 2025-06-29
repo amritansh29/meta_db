@@ -1,6 +1,54 @@
+# Python
 prompt.txt
 __pycache__/
 *.pyc
-LIDC-IDRI-DICOM
-.DS_Store
+*.pyo
+*.pyd
+.Python
 /venv/
+.venv/
+env/
+ENV/
+
+# DICOM Data
+LIDC-IDRI-DICOM
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Frontend (Node.js/React)
+frontend/node_modules/
+frontend/.pnp
+frontend/.pnp.js
+frontend/coverage/
+frontend/build/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs
+*.log
+
+# Docker
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp

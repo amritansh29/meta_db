@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from pymongo.errors import PyMongoError
-from models import ResearcherModel, CollectionModel, StudyModel, SeriesModel, InstanceModel, QueryRequest
+from models import ResearcherModel, CollectionModel, StudyModel, SeriesModel, InstanceModel
 from db import get_db
 from datetime import datetime, timezone
 from bson import ObjectId

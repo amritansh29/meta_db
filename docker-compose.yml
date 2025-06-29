@@ -47,21 +47,18 @@ services:
 
   frontend:
     build:
-      context: frontend
+      context: ./frontend
     container_name: frontend
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-      - ./frontend/vite.config.js:/app/vite.config.js
-      - ./frontend/index.html:/app/index.html
-      - ./frontend/package.json:/app/package.json
-      - ./frontend/package-lock.json:/app/package-lock.json
+      - ./frontend:/app           
+      - /app/node_modules         
     working_dir: /app
-    command: npm run dev
+    command: sh -c "npm install && npm run dev -- --host"
     depends_on:
       - db-api
+
 
 
 volumes:
