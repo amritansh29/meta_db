@@ -248,13 +248,31 @@ async def get_instance(instance_id: str, db=Depends(get_db)):
 
 def serialize_document(doc):
     if isinstance(doc, dict):
-        return {k: serialize_document(v) for k, v in doc.items()}
+        new_doc = {}
+        for k, v in doc.items():
+            if k == '_id':
+                new_doc['id'] = serialize_document(v)
+            else:
+                new_doc[k] = serialize_document(v)
+        return new_doc
     elif isinstance(doc, list):
         return [serialize_document(v) for v in doc]
     elif isinstance(doc, ObjectId):
         return str(doc)
     else:
         return doc
+
+def convert_object_ids(query):
+    if isinstance(query, dict):
+        for k, v in query.items():
+            if (k == '_id' or k.endswith('_id')) and isinstance(v, str):
+                try:
+                    query[k] = ObjectId(v)
+                except Exception:
+                    pass
+            elif isinstance(v, dict):
+                convert_object_ids(v)
+    return query
 
 @router.post("/query", summary="Query studies/series/instances collections")
 async def run_query(
@@ -267,12 +285,11 @@ async def run_query(
         raise HTTPException(status_code=400, detail="Invalid collection name")
 
     try:
+        query = convert_object_ids(query)
         cursor = db[collection].find(query).limit(100)
         results = await cursor.to_list(length=100)
         return [serialize_document(doc) for doc in results]
-
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"MongoDB error: {str(e)}")
-
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Exception: {str(e)}"})

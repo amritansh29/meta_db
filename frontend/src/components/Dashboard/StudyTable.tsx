@@ -1,31 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { studiesApi } from '../../services/api';
 import type { Study } from '../../types/dicom';
+import { useState } from 'react';
+import StudyRow from './StudyRow';
+
+const fetchStudies = async () => {
+  return studiesApi.getStudies({ limit: 10 });
+};
 
 const StudyTable = () => {
-  const [studies, setStudies] = useState<Study[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: studies = [], isLoading, error } = useQuery({
+    queryKey: ['studies', { limit: 10 }],
+    queryFn: fetchStudies,
+  });
 
-  useEffect(() => {
-    const fetchStudies = async () => {
-      try {
-        setLoading(true);
-        const data = await studiesApi.getStudies({ limit: 10 });
-        setStudies(data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch studies:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch studies');
-      } finally {
-        setLoading(false);
+  // Track expanded study IDs
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (studyId: string) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(studyId)) {
+        newSet.delete(studyId);
+      } else {
+        newSet.add(studyId);
       }
-    };
+      return newSet;
+    });
+  };
 
-    fetchStudies();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-8 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -37,7 +41,7 @@ const StudyTable = () => {
   if (error) {
     return (
       <div className="p-8 text-center text-red-600">
-        <p>Error: {error}</p>
+        <p>Error: {(error as Error).message}</p>
       </div>
     );
   }
@@ -45,16 +49,15 @@ const StudyTable = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">DICOM Studies Dashboard</h1>
-      
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b">
           <h2 className="text-lg font-semibold">Studies ({studies.length})</h2>
         </div>
-        
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
+                <th></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Patient ID
                 </th>
@@ -73,31 +76,20 @@ const StudyTable = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {studies.map((study) => (
-                <tr key={study.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {study.patient_id || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {study.study_date || 'N/A'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {study.modality || 'N/A'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {study.series?.length || 0}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {study.study_description || 'N/A'}
-                  </td>
-                </tr>
-              ))}
+              {studies.map((study: Study) => {
+                const studyId = study.id;
+                return (
+                  <StudyRow
+                    key={studyId}
+                    study={study}
+                    isExpanded={expandedRows.has(studyId)}
+                    onToggleExpand={() => toggleExpand(studyId)}
+                  />
+                );
+              })}
             </tbody>
           </table>
         </div>
-        
         {studies.length === 0 && (
           <div className="px-6 py-8 text-center text-gray-500">
             No studies found
