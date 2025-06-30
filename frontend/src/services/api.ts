@@ -4,10 +4,6 @@ import type {
   Instance, 
   QueryRequest, 
   InsertResponse, 
-  StudiesResponse,
-  SeriesResponse,
-  InstancesResponse,
-  ApiResponse 
 } from '../types/dicom';
 
 // API Configuration
@@ -44,32 +40,25 @@ async function apiCall<T>(
 // Studies API
 export const studiesApi = {
   // Get all studies with pagination and sorting
-  async getStudies(params: {
-    page?: number;
-    limit?: number;
-    sort?: string;
-    order?: 'asc' | 'desc';
-  } = {}): Promise<Study[]> {
-    // Use the query endpoint since GET /studies doesn't exist
+  async getStudies(params: { limit?: number; filters?: any }) {
     const query: Record<string, any> = {};
-    
-    // Add sorting if specified (MongoDB sort syntax)
-    if (params.sort) {
-      const sortDirection = params.order === 'asc' ? 1 : -1;
-      query.$sort = { [params.sort]: sortDirection };
-    }
-    
-    // Add pagination if specified (MongoDB skip/limit syntax)
-    if (params.page && params.limit) {
-      query.$skip = (params.page - 1) * params.limit;
-      query.$limit = params.limit;
+
+    if (params.filters) {
+      const { modality, patientId, dateRange, description } = params.filters;
+      if (modality) query.modality = modality;
+      if (patientId) query.patient_id = { $regex: patientId, $options: 'i' };
+      if (dateRange && dateRange[0] && dateRange[1]) {
+        query.study_date = { $gte: dateRange[0], $lte: dateRange[1] };
+      }
+      if (description) query.study_description = { $regex: description, $options: 'i' };
     }
 
     return apiCall<Study[]>('/query', {
       method: 'POST',
       body: JSON.stringify({
         collection: 'studies',
-        query: query
+        query,
+        limit: params.limit,
       }),
     });
   },
@@ -105,8 +94,7 @@ export const seriesApi = {
 
   // Get series for a specific study (custom endpoint - may need to be added to backend)
   async getStudySeries(studyId: string): Promise<Series[]> {
-    // This endpoint might need to be added to your backend
-    // For now, we'll use the query endpoint
+    // Query series where study_id matches the given studyId
     return queryApi.runQuery({
       collection: 'series',
       query: { study_id: studyId }
@@ -162,34 +150,7 @@ export const queryApi = {
       method: 'POST',
       body: JSON.stringify(queryRequest),
     });
-  },
-
-  // Convenience methods for common queries
-  async getStudiesByModality(modality: string): Promise<Study[]> {
-    return this.runQuery<Study>({
-      collection: 'studies',
-      query: { modality: modality }
-    });
-  },
-
-  async getStudiesByPatientId(patientId: string): Promise<Study[]> {
-    return this.runQuery<Study>({
-      collection: 'studies',
-      query: { patient_id: patientId }
-    });
-  },
-
-  async getStudiesByDateRange(startDate: string, endDate: string): Promise<Study[]> {
-    return this.runQuery<Study>({
-      collection: 'studies',
-      query: {
-        study_date: {
-          $gte: startDate,
-          $lte: endDate
-        }
-      }
-    });
-  },
+  }, 
 };
 
 // Main API export

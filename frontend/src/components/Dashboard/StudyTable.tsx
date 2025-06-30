@@ -3,19 +3,30 @@ import { studiesApi } from '../../services/api';
 import type { Study } from '../../types/dicom';
 import { useState } from 'react';
 import StudyRow from './StudyRow';
+import DetailsModal from '../Common/DetailsModel';
+import TableFilters from './TableFilters';
 
-const fetchStudies = async () => {
-  return studiesApi.getStudies({ limit: 10 });
-};
+const modalities = ['CT', 'DX']; // Add as needed, dynamic fetching
 
 const StudyTable = () => {
+  const [filters, setFilters] = useState({
+    modality: '',
+    patientId: '',
+    dateRange: ['', ''],
+    description: ''
+  });
+
   const { data: studies = [], isLoading, error } = useQuery({
-    queryKey: ['studies', { limit: 10 }],
-    queryFn: fetchStudies,
+    queryKey: ['studies', { limit: 10, filters }],
+    queryFn: () => studiesApi.getStudies({ limit: 10, filters }),
   });
 
   // Track expanded study IDs
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsTitle, setDetailsTitle] = useState('');
+  const [detailsData, setDetailsData] = useState<Record<string, any> | null>(null);
 
   const toggleExpand = (studyId: string) => {
     setExpandedRows(prev => {
@@ -28,6 +39,16 @@ const StudyTable = () => {
       return newSet;
     });
   };
+
+  const openDetails = (title: string, data: Record<string, any>) => {
+    setDetailsTitle(title);
+    setDetailsData(data);
+    setDetailsOpen(true);
+  };
+
+  const closeDetails = () => setDetailsOpen(false);
+
+  const clearFilters = () => setFilters({ modality: '', patientId: '', dateRange: ['', ''], description: '' });
 
   if (isLoading) {
     return (
@@ -49,6 +70,12 @@ const StudyTable = () => {
   return (
     <div className="p-8">
       <h1 className="text-2xl font-bold mb-6">DICOM Studies Dashboard</h1>
+      <TableFilters
+        filters={filters}
+        onChange={setFilters}
+        onClear={clearFilters}
+        modalities={modalities}
+      />
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b">
           <h2 className="text-lg font-semibold">Studies ({studies.length})</h2>
@@ -73,10 +100,14 @@ const StudyTable = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Study Description
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {studies.map((study: Study) => {
+                if (!study.id) return null;
                 const studyId = study.id;
                 return (
                   <StudyRow
@@ -84,6 +115,7 @@ const StudyTable = () => {
                     study={study}
                     isExpanded={expandedRows.has(studyId)}
                     onToggleExpand={() => toggleExpand(studyId)}
+                    onViewDetails={() => openDetails('Study Details', study)}
                   />
                 );
               })}
@@ -96,6 +128,12 @@ const StudyTable = () => {
           </div>
         )}
       </div>
+      <DetailsModal
+        open={detailsOpen}
+        onClose={closeDetails}
+        title={detailsTitle}
+        data={detailsData || {}}
+      />
     </div>
   );
 };

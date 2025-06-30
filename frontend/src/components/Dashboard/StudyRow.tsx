@@ -6,9 +6,10 @@ interface StudyRowProps {
   study: Study;
   isExpanded: boolean;
   onToggleExpand: () => void;
+  onViewDetails: () => void;
 }
 
-const StudyRow = ({ study, isExpanded, onToggleExpand }: StudyRowProps) => {
+const StudyRow = ({ study, isExpanded, onToggleExpand, onViewDetails }: StudyRowProps) => {
   return (
     <>
       <tr className="hover:bg-gray-50">
@@ -38,9 +39,20 @@ const StudyRow = ({ study, isExpanded, onToggleExpand }: StudyRowProps) => {
         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
           {study.study_description || 'N/A'}
         </td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm">
+          <button
+            className="text-blue-600 hover:underline text-xs"
+            onClick={onViewDetails}
+          >
+            View Details
+          </button>
+        </td>
       </tr>
       {isExpanded && study.id && (
-        <SeriesRows studyId={study.id} />
+        <SeriesRows
+          studyId={study.id}
+          onViewSeriesDetails={onViewDetails}
+        />
       )}
     </>
   );

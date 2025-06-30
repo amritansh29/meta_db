@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { tableApi } from '../../services/tableApi';
+import { seriesApi } from '../../services/api';
 import type { Series } from '../../types/dicom';
 
 interface SeriesRowsProps {
   studyId: string;
+  onViewSeriesDetails: (series: Series) => void;
 }
 
-const SeriesRows = ({ studyId }: SeriesRowsProps) => {
+const SeriesRows = ({ studyId, onViewSeriesDetails }: SeriesRowsProps) => {
   const { data: series = [], isLoading, error } = useQuery({
     queryKey: ['series', studyId],
-    queryFn: () => tableApi.getStudySeries(studyId),
+    queryFn: () => seriesApi.getStudySeries(studyId),
     enabled: !!studyId,
   });
 
@@ -50,6 +51,7 @@ const SeriesRows = ({ studyId }: SeriesRowsProps) => {
         <td colSpan={2} className="pl-10 py-2 font-semibold text-xs text-gray-600">Series #</td>
         <td className="text-xs font-semibold text-gray-600">Instance Count</td>
         <td className="text-xs font-semibold text-gray-600">Description</td>
+        <td className="text-xs font-semibold text-gray-600">Actions</td>
       </tr>
       {series.map((s: Series) => (
         <tr key={s.id} className="bg-gray-50">
@@ -59,6 +61,14 @@ const SeriesRows = ({ studyId }: SeriesRowsProps) => {
           </td>
           <td className="text-xs">{s.instances?.length ?? '-'}</td>
           <td className="text-xs">{s.series_description || '-'}</td>
+          <td className="text-xs">
+            <button
+              className="text-blue-600 hover:underline text-xs"
+              onClick={() => onViewSeriesDetails(s)}
+            >
+              View Details
+            </button>
+          </td>
         </tr>
       ))}
     </>
