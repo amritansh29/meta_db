@@ -274,21 +274,28 @@ def convert_object_ids(query):
                 convert_object_ids(v)
     return query
 
-@router.post("/query", summary="Query studies/series/instances collections")
+@router.post("/query", summary="Query studies/series/instances/collections")
 async def run_query(
-    collection: str = Body(..., description="studies, series, or instances"),
+    collection: str = Body(..., description="studies, series, instances, or collections"),
     query: dict = Body(default={}, description="MongoDB-style query"),
+    limit: int = Body(default=1000, description="Max results to return"),
+    skip: int = Body(default=0, description="Number of results to skip"),
     db=Depends(get_db)
 ):
-    allowed_collections = {"studies", "series", "instances"}
+    allowed_collections = {"studies", "series", "instances", "collections"}
     if collection not in allowed_collections:
         raise HTTPException(status_code=400, detail="Invalid collection name")
 
     try:
         query = convert_object_ids(query)
-        cursor = db[collection].find(query).limit(100)
-        results = await cursor.to_list(length=100)
-        return [serialize_document(doc) for doc in results]
+        cursor = db[collection].find(query).skip(skip).limit(limit)
+        results = await cursor.to_list(length=limit)
+        # Optional: get total count for pagination
+        total = await db[collection].count_documents(query)
+        return {
+            "results": [serialize_document(doc) for doc in results],
+            "total": total
+        }
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"MongoDB error: {str(e)}")
     except Exception as e:

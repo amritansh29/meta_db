@@ -14,10 +14,15 @@ interface TableFiltersProps {
 
 const TableFilters: React.FC<TableFiltersProps> = ({ filters, onChange, onClear, modalities }) => {
   const [localPatientId, setLocalPatientId] = React.useState(filters.patientId);
+  const [localDescription, setLocalDescription] = React.useState(filters.description);
 
   React.useEffect(() => {
     setLocalPatientId(filters.patientId);
   }, [filters.patientId]);
+
+  React.useEffect(() => {
+    setLocalDescription(filters.description);
+  }, [filters.description]);
 
   return (
     <div className="flex flex-wrap gap-4 items-end mb-4">
@@ -76,8 +81,13 @@ const TableFilters: React.FC<TableFiltersProps> = ({ filters, onChange, onClear,
         <input
           type="text"
           className="border rounded px-2 py-1"
-          value={filters.description}
-          onChange={e => onChange({ ...filters, description: e.target.value })}
+          value={localDescription}
+          onChange={e => setLocalDescription(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              onChange({ ...filters, description: localDescription });
+            }
+          }}
           placeholder="Study Description"
         />
       </div>

@@ -4,6 +4,7 @@ import type {
   Instance, 
   QueryRequest, 
   InsertResponse, 
+  Collection,
 } from '../types/dicom';
 
 // API Configuration
@@ -40,7 +41,7 @@ async function apiCall<T>(
 // Studies API
 export const studiesApi = {
   // Get all studies with pagination and sorting
-  async getStudies(params: { limit?: number; filters?: any }) {
+  async getStudies(params: { limit?: number; skip?: number; filters?: any }) {
     const query: Record<string, any> = {};
 
     if (params.filters) {
@@ -53,12 +54,13 @@ export const studiesApi = {
       if (description) query.study_description = { $regex: description, $options: 'i' };
     }
 
-    return apiCall<Study[]>('/query', {
+    return apiCall<{ results: Study[]; total: number }>('/query', {
       method: 'POST',
       body: JSON.stringify({
         collection: 'studies',
         query,
         limit: params.limit,
+        skip: params.skip,
       }),
     });
   },
@@ -140,16 +142,50 @@ export const collectionsApi = {
       body: JSON.stringify(collection),
     });
   },
+
+  // Get all collections using query endpoint
+  async getCollections(): Promise<Collection[]> {
+    return queryApi.runQuery({
+      collection: 'collections',
+      query: {}
+    });
+  },
+
+  // Get studies for a specific collection using query endpoint
+  async getCollectionStudies(collectionId: string, params: { limit?: number; skip?: number; filters?: any }) {
+    const query: Record<string, any> = { collection_ids: collectionId };
+
+    if (params.filters) {
+      const { modality, patientId, dateRange, description } = params.filters;
+      if (modality) query.modality = modality;
+      if (patientId) query.patient_id = { $regex: patientId, $options: 'i' };
+      if (dateRange && dateRange[0] && dateRange[1]) {
+        query.study_date = { $gte: dateRange[0], $lte: dateRange[1] };
+      }
+      if (description) query.study_description = { $regex: description, $options: 'i' };
+    }
+
+    return apiCall<{ results: Study[]; total: number }>('/query', {
+      method: 'POST',
+      body: JSON.stringify({
+        collection: 'studies',
+        query,
+        limit: params.limit,
+        skip: params.skip,
+      }),
+    });
+  },
 };
 
 // Query API for custom MongoDB queries
 export const queryApi = {
   // Run custom MongoDB queries
   async runQuery<T = any>(queryRequest: QueryRequest): Promise<T[]> {
-    return apiCall<T[]>('/query', {
+    const response = await apiCall<{ results: T[]; total: number }>('/query', {
       method: 'POST',
       body: JSON.stringify(queryRequest),
     });
+    return response.results;
   }, 
 };
 

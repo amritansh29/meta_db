@@ -52,3 +52,7 @@ logs
 # Temporary files
 *.tmp
 *.temp
+
+# Documentation (temporary exclusion)
+README.md
+CODE_REVIEW.md

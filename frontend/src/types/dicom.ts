@@ -111,7 +111,7 @@ export interface Instance {
 
 // Query Request interface - matches QueryRequest
 export interface QueryRequest {
-  collection: "studies" | "series" | "instances";
+  collection: "studies" | "series" | "instances" | "collections";
   query?: Record<string, any>;
 }
 

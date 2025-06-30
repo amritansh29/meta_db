@@ -1,5 +1,5 @@
 import { ChevronRight, ChevronDown } from 'lucide-react';
-import type { Study } from '../../types/dicom';
+import type { Study, Series } from '../../types/dicom';
 import SeriesRows from './SeriesRow';
 
 interface StudyRowProps {
@@ -7,9 +7,10 @@ interface StudyRowProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   onViewDetails: () => void;
+  onViewSeriesDetails: (series: Series) => void;
 }
 
-const StudyRow = ({ study, isExpanded, onToggleExpand, onViewDetails }: StudyRowProps) => {
+const StudyRow = ({ study, isExpanded, onToggleExpand, onViewDetails, onViewSeriesDetails }: StudyRowProps) => {
   return (
     <>
       <tr className="hover:bg-gray-50">
@@ -51,7 +52,7 @@ const StudyRow = ({ study, isExpanded, onToggleExpand, onViewDetails }: StudyRow
       {isExpanded && study.id && (
         <SeriesRows
           studyId={study.id}
-          onViewSeriesDetails={onViewDetails}
+          onViewSeriesDetails={onViewSeriesDetails}
         />
       )}
     </>

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { seriesApi } from '../../services/api';
 import type { Series } from '../../types/dicom';
+import { Link } from 'react-router-dom';
 
 interface SeriesRowsProps {
   studyId: string;
@@ -17,7 +18,7 @@ const SeriesRows = ({ studyId, onViewSeriesDetails }: SeriesRowsProps) => {
   if (isLoading) {
     return (
       <tr>
-        <td colSpan={5} className="px-6 py-2 bg-gray-50 text-center text-sm text-gray-500">
+        <td colSpan={6} className="px-6 py-2 bg-gray-50 text-center text-sm text-gray-500">
           Loading series...
         </td>
       </tr>
@@ -27,7 +28,7 @@ const SeriesRows = ({ studyId, onViewSeriesDetails }: SeriesRowsProps) => {
   if (error) {
     return (
       <tr>
-        <td colSpan={5} className="px-6 py-2 bg-red-50 text-center text-sm text-red-600">
+        <td colSpan={6} className="px-6 py-2 bg-red-50 text-center text-sm text-red-600">
           Error loading series
         </td>
       </tr>
@@ -37,7 +38,7 @@ const SeriesRows = ({ studyId, onViewSeriesDetails }: SeriesRowsProps) => {
   if (series.length === 0) {
     return (
       <tr>
-        <td colSpan={5} className="px-6 py-2 bg-gray-50 text-center text-sm text-gray-500">
+        <td colSpan={6} className="px-6 py-2 bg-gray-50 text-center text-sm text-gray-500">
           No series found
         </td>
       </tr>
@@ -51,7 +52,8 @@ const SeriesRows = ({ studyId, onViewSeriesDetails }: SeriesRowsProps) => {
         <td colSpan={2} className="pl-10 py-2 font-semibold text-xs text-gray-600">Series #</td>
         <td className="text-xs font-semibold text-gray-600">Instance Count</td>
         <td className="text-xs font-semibold text-gray-600">Description</td>
-        <td className="text-xs font-semibold text-gray-600">Actions</td>
+        <td className="text-xs font-semibold text-gray-600">Details</td>
+        <td className="text-xs font-semibold text-gray-600">Instances</td>
       </tr>
       {series.map((s: Series) => (
         <tr key={s.id} className="bg-gray-50">
@@ -68,6 +70,16 @@ const SeriesRows = ({ studyId, onViewSeriesDetails }: SeriesRowsProps) => {
             >
               View Details
             </button>
+          </td>
+          <td className="text-xs">
+            {s.id && (
+              <Link
+                to={`/series/${s.id}/instances`}
+                className="text-green-600 hover:underline text-xs"
+              >
+                View Instances
+              </Link>
+            )}
           </td>
         </tr>
       ))}
