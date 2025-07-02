@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { studiesApi } from '../../../services/api';
 import type { Study, Series } from '../../../types/dicom';
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import StudyRow from '../StudyRow';
 import DetailsModal from '../../Common/DetailsModel';
 import TableFilters from '../TableFilters';

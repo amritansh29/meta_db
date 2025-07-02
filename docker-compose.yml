@@ -39,7 +39,7 @@ services:
     container_name: extractor
     volumes:
       - ./meta_extractor/src:/app
-      - ./LIDC-IDRI-DICOM:/app/LIDC-IDRI-DICOM:ro
+      - ./LIDC-IDRI-DICOM:/app/dicom-data:ro
     command: sleep infinity
     depends_on:
       - db-api
@@ -55,7 +55,7 @@ services:
       - ./frontend:/app           
       - /app/node_modules         
     working_dir: /app
-    command: sh -c "npm install && npm run dev -- --host"
+    command: npm run dev -- --host
     depends_on:
       - db-api
 

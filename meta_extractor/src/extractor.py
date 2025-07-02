@@ -3,10 +3,14 @@ import pydicom
 from pydicom.multival import MultiValue
 from collections import defaultdict
 
+import os
+
 # --- Configuration ---
 TAGS_CONF_FILE_STUDY = "conf/StudyFeatures.txt"
 TAGS_CONF_FILE_SERIES = "conf/SeriesFeatures.txt"
 TAGS_CONF_FILE_INSTANCE = "conf/InstanceFeatures.txt"
+
+# Configuration
 PATIENT_DIR = "./LIDC-IDRI-DICOM"
 MONGO_URI = "mongodb://admin:adminpass@mongo:27017/"
 DB_NAME = "dicomdb"
