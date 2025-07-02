@@ -52,8 +52,7 @@ const SeriesRows = ({ studyId, onViewSeriesDetails }: SeriesRowsProps) => {
         <td colSpan={2} className="pl-10 py-2 font-semibold text-xs text-gray-600">Series #</td>
         <td className="text-xs font-semibold text-gray-600">Instance Count</td>
         <td className="text-xs font-semibold text-gray-600">Description</td>
-        <td className="text-xs font-semibold text-gray-600">Details</td>
-        <td className="text-xs font-semibold text-gray-600">Instances</td>
+        <td className="text-xs font-semibold text-gray-600">Actions</td>
       </tr>
       {series.map((s: Series) => (
         <tr key={s.id} className="bg-gray-50">
@@ -64,22 +63,22 @@ const SeriesRows = ({ studyId, onViewSeriesDetails }: SeriesRowsProps) => {
           <td className="text-xs">{s.instances?.length ?? '-'}</td>
           <td className="text-xs">{s.series_description || '-'}</td>
           <td className="text-xs">
-            <button
-              className="text-blue-600 hover:underline text-xs"
-              onClick={() => onViewSeriesDetails(s)}
-            >
-              View Details
-            </button>
-          </td>
-          <td className="text-xs">
-            {s.id && (
-              <Link
-                to={`/series/${s.id}/instances`}
-                className="text-green-600 hover:underline text-xs"
+            <div className="flex gap-2">
+              <button
+                className="text-blue-600 hover:underline text-xs"
+                onClick={() => onViewSeriesDetails(s)}
               >
-                View Instances
-              </Link>
-            )}
+                View Details
+              </button>
+              {s.id && (
+                <Link
+                  to={`/series/${s.id}/instances`}
+                  className="text-green-600 hover:underline text-xs"
+                >
+                  View Instances
+                </Link>
+              )}
+            </div>
           </td>
         </tr>
       ))}

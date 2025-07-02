@@ -1,14 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
-import { collectionsApi } from '../../services/api';
-import type { Collection } from '../../types/dicom';
-import { useState } from 'react';
+import { collectionsApi } from '../../../services/api';
+import type { Collection } from '../../../types/dicom';
 import { Link } from 'react-router-dom';
+import SortableHeader from '../../Common/SortableHeader';
+import { useTableSort } from '../../../hooks/useTableSort';
 
 const CollectionsTable = () => {
-  const { data: collections = [], isLoading, error } = useQuery({
-    queryKey: ['collections'],
-    queryFn: () => collectionsApi.getCollections(),
+  // Sorting hook
+  const { sortConfig, handleSort, getSortDirection, getMongoSort } = useTableSort();
+
+  const { data: collectionsData, isLoading, error } = useQuery({
+    queryKey: ['collections', { sort: sortConfig }],
+    queryFn: () => collectionsApi.getCollections({ sort: getMongoSort() }),
   });
+
+  const collections = collectionsData?.results || [];
 
   if (isLoading) {
     return (
@@ -29,17 +35,9 @@ const CollectionsTable = () => {
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">DICOM Collections</h1>
-          <p className="text-gray-600 mt-1">Browse studies organized by collections</p>
-        </div>
-        <Link
-          to="/studies"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-        >
-          View All Studies
-        </Link>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">DICOM Collections</h1>
+        <p className="text-gray-600 mt-1">Browse studies organized by collections</p>
       </div>
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b">
@@ -49,18 +47,34 @@ const CollectionsTable = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <SortableHeader
+                  field="name"
+                  currentDirection={getSortDirection('name')}
+                  onSort={handleSort}
+                >
                   Collection Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="description"
+                  currentDirection={getSortDirection('description')}
+                  onSort={handleSort}
+                >
                   Description
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="cases"
+                  currentDirection={getSortDirection('cases')}
+                  onSort={handleSort}
+                >
                   Study Count
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="created_at"
+                  currentDirection={getSortDirection('created_at')}
+                  onSort={handleSort}
+                >
                   Created
-                </th>
+                </SortableHeader>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -88,7 +102,7 @@ const CollectionsTable = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <Link
                         to={`/collections/${collection.id}/studies`}
-                        className="text-blue-600 hover:underline text-xs"
+                        className="text-green-600 hover:underline text-xs"
                       >
                         View Studies
                       </Link>

@@ -1,4 +1,5 @@
 import { ChevronRight, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { Study, Series } from '../../types/dicom';
 import SeriesRows from './SeriesRow';
 
@@ -41,12 +42,20 @@ const StudyRow = ({ study, isExpanded, onToggleExpand, onViewDetails, onViewSeri
           {study.study_description || 'N/A'}
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm">
-          <button
-            className="text-blue-600 hover:underline text-xs"
-            onClick={onViewDetails}
-          >
-            View Details
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="text-blue-600 hover:underline text-xs"
+              onClick={onViewDetails}
+            >
+              View Details
+            </button>
+            <Link
+              to={`/studies/${study.id}/series`}
+              className="text-green-600 hover:underline text-xs"
+            >
+              View Series
+            </Link>
+          </div>
         </td>
       </tr>
       {isExpanded && study.id && (

@@ -41,7 +41,7 @@ async function apiCall<T>(
 // Studies API
 export const studiesApi = {
   // Get all studies with pagination and sorting
-  async getStudies(params: { limit?: number; skip?: number; filters?: any }) {
+  async getStudies(params: { limit?: number; skip?: number; filters?: any; sort?: Record<string, 1 | -1> }) {
     const query: Record<string, any> = {};
 
     if (params.filters) {
@@ -54,13 +54,14 @@ export const studiesApi = {
       if (description) query.study_description = { $regex: description, $options: 'i' };
     }
 
-    return apiCall<{ results: Study[]; total: number }>('/query', {
+    return apiCall<{ results: Study[]; total: number; sort?: Record<string, 1 | -1> }>('/query', {
       method: 'POST',
       body: JSON.stringify({
         collection: 'studies',
         query,
         limit: params.limit,
         skip: params.skip,
+        sort: params.sort || {},
       }),
     });
   },
@@ -81,6 +82,32 @@ export const studiesApi = {
 
 // Series API
 export const seriesApi = {
+  // Get all series with pagination and sorting
+  async getAllSeries(params: { limit?: number; skip?: number; filters?: any; sort?: Record<string, 1 | -1> }) {
+    const query: Record<string, any> = {};
+
+    if (params.filters) {
+      const { seriesNumber, dateRange, description, studyId } = params.filters;
+      if (seriesNumber) query.series_number = seriesNumber;
+      if (dateRange && dateRange[0] && dateRange[1]) {
+        query.series_date = { $gte: dateRange[0], $lte: dateRange[1] };
+      }
+      if (description) query.series_description = { $regex: description, $options: 'i' };
+      if (studyId) query.study_id = studyId;
+    }
+
+    return apiCall<{ results: Series[]; total: number; sort?: Record<string, 1 | -1> }>('/query', {
+      method: 'POST',
+      body: JSON.stringify({
+        collection: 'series',
+        query,
+        limit: params.limit,
+        skip: params.skip,
+        sort: params.sort || {},
+      }),
+    });
+  },
+
   // Get a specific series by ID
   async getSeries(seriesId: string): Promise<Series> {
     return apiCall<Series>(`/series/${seriesId}`);
@@ -106,6 +133,32 @@ export const seriesApi = {
 
 // Instances API
 export const instancesApi = {
+  // Get all instances with pagination and sorting
+  async getAllInstances(params: { limit?: number; skip?: number; filters?: any; sort?: Record<string, 1 | -1> }) {
+    const query: Record<string, any> = {};
+
+    if (params.filters) {
+      const { instanceNumber, dateRange, sopClass, seriesId } = params.filters;
+      if (instanceNumber) query.instance_number = instanceNumber;
+      if (dateRange && dateRange[0] && dateRange[1]) {
+        query.acquisition_datetime = { $gte: dateRange[0], $lte: dateRange[1] };
+      }
+      if (sopClass) query.sop_class_uid = { $regex: sopClass, $options: 'i' };
+      if (seriesId) query.series_id = seriesId;
+    }
+
+    return apiCall<{ results: Instance[]; total: number; sort?: Record<string, 1 | -1> }>('/query', {
+      method: 'POST',
+      body: JSON.stringify({
+        collection: 'instances',
+        query,
+        limit: params.limit,
+        skip: params.skip,
+        sort: params.sort || {},
+      }),
+    });
+  },
+
   // Get a specific instance by ID
   async getInstance(instanceId: string): Promise<Instance> {
     return apiCall<Instance>(`/instances/${instanceId}`);
@@ -144,15 +197,21 @@ export const collectionsApi = {
   },
 
   // Get all collections using query endpoint
-  async getCollections(): Promise<Collection[]> {
-    return queryApi.runQuery({
-      collection: 'collections',
-      query: {}
+  async getCollections(params?: { limit?: number; skip?: number; sort?: Record<string, 1 | -1> }): Promise<{ results: Collection[]; total: number; sort?: Record<string, 1 | -1> }> {
+    return apiCall<{ results: Collection[]; total: number; sort?: Record<string, 1 | -1> }>('/query', {
+      method: 'POST',
+      body: JSON.stringify({
+        collection: 'collections',
+        query: {},
+        limit: params?.limit,
+        skip: params?.skip,
+        sort: params?.sort || {},
+      }),
     });
   },
 
   // Get studies for a specific collection using query endpoint
-  async getCollectionStudies(collectionId: string, params: { limit?: number; skip?: number; filters?: any }) {
+  async getCollectionStudies(collectionId: string, params: { limit?: number; skip?: number; filters?: any; sort?: Record<string, 1 | -1> }) {
     const query: Record<string, any> = { collection_ids: collectionId };
 
     if (params.filters) {
@@ -165,13 +224,14 @@ export const collectionsApi = {
       if (description) query.study_description = { $regex: description, $options: 'i' };
     }
 
-    return apiCall<{ results: Study[]; total: number }>('/query', {
+    return apiCall<{ results: Study[]; total: number; sort?: Record<string, 1 | -1> }>('/query', {
       method: 'POST',
       body: JSON.stringify({
         collection: 'studies',
         query,
         limit: params.limit,
         skip: params.skip,
+        sort: params.sort || {},
       }),
     });
   },

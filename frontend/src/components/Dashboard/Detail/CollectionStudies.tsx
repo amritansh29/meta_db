@@ -1,16 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
-import { studiesApi } from '../../services/api';
-import type { Study, Series } from '../../types/dicom';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import StudyRow from './StudyRow';
-import DetailsModal from '../Common/DetailsModel';
-import TableFilters from './TableFilters';
+import { collectionsApi } from '../../../services/api';
+import type { Study, Series} from '../../../types/dicom';
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import StudyRow from '../StudyRow';
+import DetailsModal from '../../Common/DetailsModel';
+import TableFilters from '../TableFilters';
+import SortableHeader from '../../Common/SortableHeader';
+import { useTableSort } from '../../../hooks/useTableSort';
 
 const modalities = ['CT', 'DX']; // Add as needed, dynamic fetching
 
-const PAGE_SIZE = 20
-const StudyTable = () => {
+const PAGE_SIZE = 20;
+
+const CollectionStudies = () => {
+  const { collectionId } = useParams<{ collectionId: string }>();
+  
   const [filters, setFilters] = useState({
     modality: '',
     patientId: '',
@@ -20,16 +25,28 @@ const StudyTable = () => {
 
   const [page, setPage] = useState(1);
 
-  // Query for paginated studies
+  // Query for collection details
+  const { data: collection } = useQuery({
+    queryKey: ['collection', collectionId],
+    queryFn: () => collectionsApi.getCollection(collectionId!),
+    enabled: !!collectionId,
+  });
+
+  // Sorting hook
+  const { sortConfig, handleSort, getSortDirection, getMongoSort } = useTableSort();
+
+  // Query for paginated studies in this collection with sorting
   const { data, isLoading, error } = useQuery({
-    queryKey: ['studies', { page, filters }],
+    queryKey: ['collection-studies', collectionId, { page, filters, sort: sortConfig }],
     queryFn: () =>
-      studiesApi.getStudies({
+      collectionsApi.getCollectionStudies(collectionId!, {
         limit: PAGE_SIZE,
         skip: (page - 1) * PAGE_SIZE,
         filters,
+        sort: getMongoSort(),
       }),
     keepPreviousData: true,
+    enabled: !!collectionId,
   });
 
   const studies = data?.results || [];
@@ -79,11 +96,16 @@ const StudyTable = () => {
     setPage(1);
   };
 
+  // Reset page when sorting changes
+  useEffect(() => {
+    setPage(1);
+  }, [sortConfig]);
+
   if (isLoading) {
     return (
       <div className="p-8 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-2">Loading studies...</p>
+        <p className="mt-2">Loading collection studies...</p>
       </div>
     );
   }
@@ -100,22 +122,28 @@ const StudyTable = () => {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">All Studies</h1>
-          <p className="text-gray-600 mt-1">Browse all DICOM studies across all collections</p>
+          <h1 className="text-2xl font-bold">
+            {collection?.name || 'Collection'} Studies
+          </h1>
+          {collection?.description && (
+            <p className="text-gray-600 mt-1">{collection.description}</p>
+          )}
         </div>
         <Link
           to="/collections"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
         >
-          View Collections
+          ← Back to Collections
         </Link>
       </div>
+      
       <TableFilters
         filters={filters}
         onChange={handleFilterChange}
         onClear={clearFilters}
         modalities={modalities}
       />
+      
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b">
           <h2 className="text-lg font-semibold">Studies ({total})</h2>
@@ -125,21 +153,41 @@ const StudyTable = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th></th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <SortableHeader
+                  field="patient_id"
+                  currentDirection={getSortDirection('patient_id')}
+                  onSort={handleSort}
+                >
                   Patient ID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="study_date"
+                  currentDirection={getSortDirection('study_date')}
+                  onSort={handleSort}
+                >
                   Study Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="modality"
+                  currentDirection={getSortDirection('modality')}
+                  onSort={handleSort}
+                >
                   Modality
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="series_count"
+                  currentDirection={getSortDirection('series_count')}
+                  onSort={handleSort}
+                >
                   Series Count
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="study_description"
+                  currentDirection={getSortDirection('study_description')}
+                  onSort={handleSort}
+                >
                   Study Description
-                </th>
+                </SortableHeader>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -165,10 +213,11 @@ const StudyTable = () => {
         </div>
         {studies.length === 0 && (
           <div className="px-6 py-8 text-center text-gray-500">
-            No studies found
+            No studies found in this collection
           </div>
         )}
       </div>
+      
       {/* Pagination Controls */}
       <div className="flex items-center justify-between mt-4">
         <button
@@ -189,6 +238,7 @@ const StudyTable = () => {
           Next
         </button>
       </div>
+      
       <DetailsModal
         open={detailsOpen}
         onClose={closeDetails}
@@ -199,4 +249,4 @@ const StudyTable = () => {
   );
 };
 
-export default StudyTable;
+export default CollectionStudies; 

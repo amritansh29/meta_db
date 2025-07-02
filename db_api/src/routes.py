@@ -280,6 +280,7 @@ async def run_query(
     query: dict = Body(default={}, description="MongoDB-style query"),
     limit: int = Body(default=1000, description="Max results to return"),
     skip: int = Body(default=0, description="Number of results to skip"),
+    sort: dict = Body(default={}, description="Sort specification, e.g., {'field': 1} for ascending, {'field': -1} for descending"),
     db=Depends(get_db)
 ):
     allowed_collections = {"studies", "series", "instances", "collections"}
@@ -288,13 +289,23 @@ async def run_query(
 
     try:
         query = convert_object_ids(query)
-        cursor = db[collection].find(query).skip(skip).limit(limit)
+        cursor = db[collection].find(query)
+        
+        # Apply sorting if provided
+        if sort:
+            cursor = cursor.sort(list(sort.items()))
+        
+        # Apply pagination after sorting
+        cursor = cursor.skip(skip).limit(limit)
         results = await cursor.to_list(length=limit)
-        # Optional: get total count for pagination
+        
+        # Get total count for pagination
         total = await db[collection].count_documents(query)
+        
         return {
             "results": [serialize_document(doc) for doc in results],
-            "total": total
+            "total": total,
+            "sort": sort
         }
     except PyMongoError as e:
         raise HTTPException(status_code=500, detail=f"MongoDB error: {str(e)}")

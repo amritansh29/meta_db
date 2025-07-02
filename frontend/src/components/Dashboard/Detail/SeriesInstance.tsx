@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { instancesApi, seriesApi } from '../../services/api';
-import type { Instance, Series } from '../../types/dicom';
-import { useState } from 'react';
+import { instancesApi, seriesApi } from '../../../services/api';
+import type { Instance} from '../../../types/dicom';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import DetailsModal from '../Common/DetailsModel';
+import DetailsModal from '../../Common/DetailsModel';
+import SortableHeader from '../../Common/SortableHeader';
+import { useTableSort } from '../../../hooks/useTableSort';
 
 const PAGE_SIZE = 20;
 
@@ -21,19 +23,26 @@ const InstancesTable = () => {
     enabled: !!seriesId,
   });
 
-  // Query for instances in this series with pagination
-  const { data: instances = [], isLoading, error } = useQuery({
-    queryKey: ['series-instances', seriesId],
-    queryFn: () => instancesApi.getSeriesInstances(seriesId!),
+  // Sorting hook
+  const { sortConfig, handleSort, getSortDirection, getMongoSort } = useTableSort();
+
+  // Query for instances in this series with pagination, filters, and sorting
+  const { data: instancesData, isLoading, error } = useQuery({
+    queryKey: ['series-instances', seriesId, page, { sort: sortConfig }],
+    queryFn: () => instancesApi.getAllInstances({
+      limit: PAGE_SIZE,
+      skip: (page - 1) * PAGE_SIZE,
+      filters: {
+        seriesId: seriesId, // Filter by series
+      },
+      sort: getMongoSort(),
+    }),
     enabled: !!seriesId,
   });
 
-  // Calculate pagination
-  const totalInstances = instances.length;
+  const instances = instancesData?.results || [];
+  const totalInstances = instancesData?.total || 0;
   const totalPages = Math.ceil(totalInstances / PAGE_SIZE);
-  const startIndex = (page - 1) * PAGE_SIZE;
-  const endIndex = startIndex + PAGE_SIZE;
-  const currentPageInstances = instances.slice(startIndex, endIndex);
 
   const openDetails = (title: string, data: Record<string, any>) => {
     setDetailsData(data);
@@ -41,6 +50,11 @@ const InstancesTable = () => {
   };
 
   const closeDetails = () => setDetailsOpen(false);
+
+  // Reset page when sorting changes
+  useEffect(() => {
+    setPage(1);
+  }, [sortConfig]);
 
   if (isLoading) {
     return (
@@ -72,10 +86,10 @@ const InstancesTable = () => {
           )}
         </div>
         <Link
-          to="/studies"
+          to={series?.study_id ? `/studies/${series.study_id}/series` : "/series"}
           className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm"
         >
-          ← Back to Studies
+          ← Back to Series
         </Link>
       </div>
       
@@ -89,28 +103,48 @@ const InstancesTable = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <SortableHeader
+                  field="instance_number"
+                  currentDirection={getSortDirection('instance_number')}
+                  onSort={handleSort}
+                >
                   Instance Number
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="sop_instance_uid"
+                  currentDirection={getSortDirection('sop_instance_uid')}
+                  onSort={handleSort}
+                >
                   SOP Instance UID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="sop_class_uid"
+                  currentDirection={getSortDirection('sop_class_uid')}
+                  onSort={handleSort}
+                >
                   SOP Class UID
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="acquisition_datetime"
+                  currentDirection={getSortDirection('acquisition_datetime')}
+                  onSort={handleSort}
+                >
                   Acquisition Date/Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                </SortableHeader>
+                <SortableHeader
+                  field="image_position"
+                  currentDirection={getSortDirection('image_position')}
+                  onSort={handleSort}
+                >
                   Image Position
-                </th>
+                </SortableHeader>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {currentPageInstances.map((instance: Instance) => {
+              {instances.map((instance: Instance) => {
                 if (!instance.id) return null;
                 return (
                   <tr key={instance.id} className="hover:bg-gray-50">
@@ -150,7 +184,7 @@ const InstancesTable = () => {
             </tbody>
           </table>
         </div>
-        {currentPageInstances.length === 0 && (
+        {instances.length === 0 && (
           <div className="px-6 py-8 text-center text-gray-500">
             No instances found for this series
           </div>
@@ -168,7 +202,7 @@ const InstancesTable = () => {
             Previous
           </button>
           <span className="text-sm text-gray-600">
-            Showing {startIndex + 1}-{Math.min(endIndex, totalInstances)} of {totalInstances} instances
+            Showing {((page - 1) * PAGE_SIZE) + 1}-{Math.min(page * PAGE_SIZE, totalInstances)} of {totalInstances} instances
           </span>
           <button
             className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
