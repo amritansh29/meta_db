@@ -1,8 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from db import connect_to_mongo, close_mongo_connection
-from routes import router
+from services.db_service import connect_to_mongo, close_mongo_connection
+from routes.db_routes import router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

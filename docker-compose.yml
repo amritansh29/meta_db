@@ -19,10 +19,10 @@ services:
     depends_on:
       - mongo
 
-  db-api:
+  backend:
     build: 
-      context: db_api
-    container_name: db-api
+      context: backend
+    container_name: backend
     ports:
       - "8000:8000"
     environment:
@@ -30,7 +30,7 @@ services:
     depends_on:
       - mongo
     volumes:
-      - ./db_api/src:/app
+      - ./backend:/app
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
   extractor:
@@ -42,7 +42,7 @@ services:
       - ./LIDC-IDRI-DICOM:/app/dicom-data:ro
     command: sleep infinity
     depends_on:
-      - db-api
+      - backend
     tty: true
 
   frontend:
@@ -57,7 +57,7 @@ services:
     working_dir: /app
     command: npm run dev -- --host
     depends_on:
-      - db-api
+      - backend
 
 
 
