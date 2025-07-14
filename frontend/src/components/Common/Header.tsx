@@ -1,7 +1,71 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import RawMongoQueryCard from './RawMongoQueryCard';
+
+function extractIdFromPath(pathname: string, key: string): string | undefined {
+  const match = pathname.match(new RegExp(`/${key}/([^/]+)`));
+  return match ? match[1] : undefined;
+}
+
+function getQueryDefaults(pathname: string) {
+  // All-collection pages: set defaultCollection
+  if (pathname === '/studies') {
+    return { defaultCollection: 'studies' };
+  }
+  if (pathname === '/series') {
+    return { defaultCollection: 'series' };
+  }
+  if (pathname === '/instances') {
+    return { defaultCollection: 'instances' };
+  }
+  if (pathname === '/collections') {
+    return { defaultCollection: 'collections' };
+  }
+  if (pathname === '/') {
+    return {};
+  }
+  // /studies/:studyId/series
+  if (/^\/studies\/[^/]+\/series$/.test(pathname)) {
+    const studyId = extractIdFromPath(pathname, 'studies');
+    if (studyId) return { defaultCollection: 'series', defaultQuery: { study_id: studyId } };
+  }
+  // /series/:seriesId/instances
+  if (/^\/series\/[^/]+\/instances$/.test(pathname)) {
+    const seriesId = extractIdFromPath(pathname, 'series');
+    if (seriesId) return { defaultCollection: 'instances', defaultQuery: { series_id: seriesId } };
+  }
+  // /collections/:collectionId/studies
+  if (/^\/collections\/[^/]+\/studies$/.test(pathname)) {
+    const collectionId = extractIdFromPath(pathname, 'collections');
+    if (collectionId) return { defaultCollection: 'studies', defaultQuery: { collection_ids: collectionId } };
+  }
+  // /studies/:studyId
+  if (/^\/studies\/[^/]+$/.test(pathname)) {
+    const studyId = extractIdFromPath(pathname, 'studies');
+    if (studyId) return { defaultCollection: 'studies', defaultQuery: { _id: studyId } };
+  }
+  // /series/:seriesId
+  if (/^\/series\/[^/]+$/.test(pathname)) {
+    const seriesId = extractIdFromPath(pathname, 'series');
+    if (seriesId) return { defaultCollection: 'series', defaultQuery: { _id: seriesId } };
+  }
+  // /instances/:instanceId
+  if (/^\/instances\/[^/]+$/.test(pathname)) {
+    const instanceId = extractIdFromPath(pathname, 'instances');
+    if (instanceId) return { defaultCollection: 'instances', defaultQuery: { _id: instanceId } };
+  }
+  // /collections/:collectionId
+  if (/^\/collections\/[^/]+$/.test(pathname)) {
+    const collectionId = extractIdFromPath(pathname, 'collections');
+    if (collectionId) return { defaultCollection: 'collections', defaultQuery: { _id: collectionId } };
+  }
+  return {};
+}
 
 const Header = () => {
   const location = useLocation();
+  const [showRawQuery, setShowRawQuery] = useState(false);
+  const [queryDefaults, setQueryDefaults] = useState<{ defaultCollection?: string; defaultQuery?: object }>({});
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -11,6 +75,11 @@ const Header = () => {
     return isActive(path) 
       ? 'bg-blue-700 text-white' 
       : 'text-gray-300 hover:bg-blue-600 hover:text-white';
+  };
+
+  const handleOpenRawQuery = () => {
+    setQueryDefaults(getQueryDefaults(location.pathname));
+    setShowRawQuery(true);
   };
 
   return (
@@ -31,7 +100,7 @@ const Header = () => {
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex space-x-1">
+          <nav className="flex space-x-1 items-center">
             <Link
               to="/collections"
               className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${getActiveClass('/collections')}`}
@@ -56,6 +125,15 @@ const Header = () => {
             >
               Instances
             </Link>
+            {/* Raw Mongo Query Button - styled like other header links */}
+            <button
+              onClick={handleOpenRawQuery}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${getActiveClass('RAW_MONGO_QUERY_MODAL')}`}
+              type="button"
+            >
+              Raw Mongo Query
+            </button>
+            <RawMongoQueryCard open={showRawQuery} onClose={() => setShowRawQuery(false)} {...queryDefaults} />
           </nav>
         </div>
       </div>

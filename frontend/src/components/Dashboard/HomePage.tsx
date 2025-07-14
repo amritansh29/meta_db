@@ -1,6 +1,10 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import RawMongoQueryCard from '../Common/RawMongoQueryCard';
 
 const HomePage = () => {
+  const [showRawQuery, setShowRawQuery] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
       <div className="text-center">
@@ -25,7 +29,6 @@ const HomePage = () => {
               </svg>
               Browse Collections
             </Link>
-            
             <Link
               to="/studies"
               className="inline-flex items-center px-8 py-4 bg-purple-600 text-white text-lg font-semibold rounded-lg hover:bg-purple-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
@@ -35,7 +38,6 @@ const HomePage = () => {
               </svg>
               Browse Studies
             </Link>
-            
             <Link
               to="/series"
               className="inline-flex items-center px-8 py-4 bg-green-600 text-white text-lg font-semibold rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
@@ -45,7 +47,6 @@ const HomePage = () => {
               </svg>
               Browse Series
             </Link>
-            
             <Link
               to="/instances"
               className="inline-flex items-center px-8 py-4 bg-orange-600 text-white text-lg font-semibold rounded-lg hover:bg-orange-700 transition-colors duration-200 shadow-lg hover:shadow-xl"
@@ -93,6 +94,19 @@ const HomePage = () => {
             <p className="text-gray-600">View comprehensive DICOM metadata for studies, series, and instances with expandable details.</p>
           </div>
         </div>
+        {/* Raw Mongo Query Button */}
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={() => setShowRawQuery(true)}
+            className="inline-flex items-center px-6 py-3 bg-gray-800 text-white text-base font-semibold rounded-lg hover:bg-gray-900 transition-colors duration-200 shadow-md"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" />
+            </svg>
+            Raw Mongo Query
+          </button>
+        </div>
+        <RawMongoQueryCard open={showRawQuery} onClose={() => setShowRawQuery(false)} />
       </div>
     </div>
   );

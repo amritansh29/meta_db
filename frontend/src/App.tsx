@@ -8,6 +8,7 @@ import InstanceTable from "./components/Dashboard/All/InstanceTable";
 import CollectionsTable from "./components/Dashboard/All/CollectionsTable";
 import CollectionStudies from "./components/Dashboard/Detail/CollectionStudies";
 import SeriesInstance from "./components/Dashboard/Detail/SeriesInstance";
+import QueryResultsPage from "./pages/QueryResultsPage";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/collections" element={<CollectionsTable />} />
           <Route path="/collections/:collectionId/studies" element={<CollectionStudies />} />
           <Route path="/series/:seriesId/instances" element={<SeriesInstance />} />
+          <Route path="/query-results" element={<QueryResultsPage />} />
           {/* Optional: Add a 404 fallback */}
           <Route path="*" element={<div className="p-8 text-center text-red-600">404 Not Found</div>} />
         </Routes>
