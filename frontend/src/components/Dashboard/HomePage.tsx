@@ -1,9 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import RawMongoQueryCard from '../Common/RawMongoQueryCard';
+import SearchBar from '../Common/SearchBar';
 
 const HomePage = () => {
   const [showRawQuery, setShowRawQuery] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // TODO: Implement search logic or trigger modal
+    alert(`Search: ${searchValue}`);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -57,7 +69,15 @@ const HomePage = () => {
               Browse Instances
             </Link>
           </div>
-          
+          {/* SearchBar always visible below navigation buttons */}
+          <div className="max-w-xl mx-auto mt-6">
+            <SearchBar
+              value={searchValue}
+              onChange={handleSearchChange}
+              onSubmit={handleSearchSubmit}
+              placeholder="Search studies, series, or instances..."
+            />
+          </div>
           <div className="text-sm text-gray-500">
             Start by exploring your DICOM collections, studies, series, or instances
           </div>

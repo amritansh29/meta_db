@@ -8,7 +8,7 @@ import type {
 } from '../types/dicom';
 
 // API Configuration
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8000';
 
 // Helper function for API calls
 async function apiCall<T>(

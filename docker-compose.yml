@@ -24,7 +24,7 @@ services:
       context: db_api
     container_name: db-api
     ports:
-      - "8001:8000"
+      - "8000:8000"
     environment:
       - MONGO_URL=mongodb://mongo:27017
     depends_on:

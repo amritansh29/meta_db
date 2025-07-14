@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import RawMongoQueryCard from './RawMongoQueryCard';
+import SearchBar from './SearchBar';
 
 function extractIdFromPath(pathname: string, key: string): string | undefined {
   const match = pathname.match(new RegExp(`/${key}/([^/]+)`));
@@ -66,6 +67,8 @@ const Header = () => {
   const location = useLocation();
   const [showRawQuery, setShowRawQuery] = useState(false);
   const [queryDefaults, setQueryDefaults] = useState<{ defaultCollection?: string; defaultQuery?: object }>({});
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -80,6 +83,17 @@ const Header = () => {
   const handleOpenRawQuery = () => {
     setQueryDefaults(getQueryDefaults(location.pathname));
     setShowRawQuery(true);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchValue(e.target.value);
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    // TODO: Implement search logic
+    alert(`Search: ${searchValue}`);
+    setShowSearchModal(false);
   };
 
   return (
@@ -133,10 +147,44 @@ const Header = () => {
             >
               Raw Mongo Query
             </button>
+            {/* Search Icon Button */}
+            <button
+              onClick={() => setShowSearchModal(true)}
+              className="ml-2 p-2 rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-white"
+              aria-label="Open search"
+              type="button"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
             <RawMongoQueryCard open={showRawQuery} onClose={() => setShowRawQuery(false)} {...queryDefaults} />
           </nav>
         </div>
       </div>
+      {/* Search Modal Overlay */}
+      {showSearchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg relative pt-10">
+            <button
+              onClick={() => setShowSearchModal(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              aria-label="Close search"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <SearchBar
+              value={searchValue}
+              onChange={handleSearchChange}
+              onSubmit={handleSearchSubmit}
+              placeholder="Search studies, series, or instances..."
+              autoFocus
+            />
+          </div>
+        </div>
+      )}
     </header>
   );
 };
