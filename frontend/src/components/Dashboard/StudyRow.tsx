@@ -9,38 +9,35 @@ interface StudyRowProps {
   onToggleExpand: () => void;
   onViewDetails: () => void;
   onViewSeriesDetails: (series: Series) => void;
+  selectedColumns: string[];
 }
 
-const StudyRow = ({ study, isExpanded, onToggleExpand, onViewDetails, onViewSeriesDetails }: StudyRowProps) => {
+const StudyRow = ({ study, isExpanded, onToggleExpand, onViewDetails, onViewSeriesDetails, selectedColumns }: StudyRowProps) => {
   return (
     <>
       <tr className="hover:bg-gray-50">
         <td className="px-2 py-4">
           <button
-            onClick={() => { console.log('Expand clicked', study.id); onToggleExpand(); }}
+            onClick={() => { onToggleExpand(); }}
             className="p-1 hover:bg-gray-200 rounded transition-colors"
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
           </button>
         </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-          {study.patient_id || 'N/A'}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {study.study_date || 'N/A'}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            {study.modality || 'N/A'}
-          </span>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {study.series?.length || 0}
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-          {study.study_description || 'N/A'}
-        </td>
+        {selectedColumns.map((field) => {
+          let value = study[field as keyof Study] ?? study.metadata?.[field] ?? '—';
+          if (Array.isArray(value)) {
+            value = value.length > 0 ? `${value.length} items` : '—';
+          } else if (typeof value === 'object' && value !== null) {
+            value = '[object]';
+          }
+          return (
+            <td key={field} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {value}
+            </td>
+          );
+        })}
         <td className="px-6 py-4 whitespace-nowrap text-sm">
           <div className="flex gap-2">
             <button

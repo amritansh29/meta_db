@@ -279,3 +279,13 @@ export async function checkApiHealth(): Promise<boolean> {
     return false;
   }
 } 
+
+export async function getAvailableFields(collection: string): Promise<string[]> {
+  const data = await apiCall<{ fields: string[] }>(`/available-fields?collection=${collection}`);
+  return Array.isArray(data.fields) ? data.fields : [];
+} 
+
+export async function getAvailableMetadataFields(collection: string): Promise<string[]> {
+  const data = await apiCall<{ metadata_fields: string[] }>(`/available-metadata-fields?collection=${collection}`);
+  return Array.isArray(data.metadata_fields) ? data.metadata_fields : [];
+} 

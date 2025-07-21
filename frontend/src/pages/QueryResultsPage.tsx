@@ -5,7 +5,7 @@ function isArrayOfObjects(data: any): data is Record<string, any>[] {
   return Array.isArray(data) && data.length > 0 && typeof data[0] === 'object' && !Array.isArray(data[0]);
 }
 
-const API_BASE_URL = 'http://localhost:8001';
+const API_BASE_URL = 'http://localhost:8000';
 
 async function fetchQueryResults({ collection, query, limit, skip }: { collection: string, query: any, limit: number, skip: number }) {
   const response = await fetch(`${API_BASE_URL}/query`, {

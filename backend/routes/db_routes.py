@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, status, Body, Query
 from pymongo.errors import PyMongoError
 from models.models import ResearcherModel, CollectionModel, StudyModel, SeriesModel, InstanceModel
 from services.db_service import get_db
@@ -6,6 +6,14 @@ from datetime import datetime, timezone
 from bson import ObjectId
 import traceback
 from fastapi.responses import JSONResponse
+from pymongo import MongoClient
+
+MODEL_MAP = {
+    'studies': StudyModel,
+    # 'series': SeriesModel,
+    # 'instances': InstanceModel,
+    # Add more as needed
+}
 
 router = APIRouter()
 
@@ -311,3 +319,48 @@ async def run_query(
         raise HTTPException(status_code=500, detail=f"MongoDB error: {str(e)}")
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Exception: {str(e)}"})
+
+@router.get('/available-fields')
+async def get_available_fields(
+    collection: str = Query(..., description='Collection name'),
+    collection_id: str = Query(None, description='Optional collection ID'),
+    db=Depends(get_db)
+):
+    if collection not in MODEL_MAP:
+        raise HTTPException(status_code=400, detail='Invalid collection name')
+    model = MODEL_MAP[collection]
+    standard_fields = list(model.model_fields.keys())
+
+    query = {}
+    if collection_id:
+        query['collection_id'] = collection_id
+    cursor = db[collection].find(query, {'metadata': 1})
+    metadata_keys = set()
+    async for doc in cursor:
+        metadata_keys.update(doc.get('metadata', {}).keys())
+        if len(metadata_keys) > 100:  # Limit to 100 unique keys for performance
+            break
+
+    all_fields = list(set(standard_fields) | metadata_keys)
+    return {"fields": all_fields}
+
+@router.get('/available-metadata-fields')
+async def get_available_metadata_fields(
+    collection: str = Query(..., description='Collection name'),
+    collection_id: str = Query(None, description='Optional collection ID'),
+    db=Depends(get_db)
+):
+    if collection not in MODEL_MAP:
+        raise HTTPException(status_code=400, detail='Invalid collection name')
+
+    query = {}
+    if collection_id:
+        query['collection_id'] = collection_id
+    cursor = db[collection].find(query, {'metadata': 1})
+    metadata_keys = set()
+    async for doc in cursor:
+        metadata_keys.update(doc.get('metadata', {}).keys())
+        if len(metadata_keys) > 100:  # Limit to 100 unique keys for performance
+            break
+
+    return {"metadata_fields": list(metadata_keys)}

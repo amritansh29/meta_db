@@ -7,6 +7,9 @@ import DetailsModal from '../../Common/DetailsModel';
 import TableFilters from '../TableFilters';
 import SortableHeader from '../../Common/SortableHeader';
 import { useTableSort } from '../../../hooks/useTableSort';
+import ColumnSelector from '../../Common/ColumnSelector';
+import { getAvailableFields, getAvailableMetadataFields } from '../../../services/api';
+// import axios from 'axios'; // Remove axios
 
 const modalities = ['CT', 'DX']; // Add as needed, dynamic fetching
 
@@ -23,6 +26,33 @@ const StudyTable = () => {
 
   // Sorting hook
   const { sortConfig, handleSort, getSortDirection, getMongoSort } = useTableSort();
+
+  const [selectedColumns, setSelectedColumns] = useState<string[]>([
+    'patient_id',
+    'study_date',
+    'modality',
+    'study_description',
+  ]);
+
+  // Use useQuery to fetch available fields
+  const { data: availableFieldsData } = useQuery({
+    queryKey: ['available-fields', 'studies'],
+    queryFn: () => getAvailableFields('studies'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const { data: metadataFieldsData } = useQuery({
+    queryKey: ['available-metadata-fields', 'studies'],
+    queryFn: () => getAvailableMetadataFields('studies'),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const mergedFields = [
+    ...(availableFieldsData || []),
+    ...(metadataFieldsData || []),
+  ];
+  // Deduplicate
+  const availableFields = Array.from(new Set(mergedFields));
 
   // Query for paginated studies with sorting
   const { data, isLoading, error } = useQuery({
@@ -89,6 +119,7 @@ const StudyTable = () => {
     setPage(1);
   }, [sortConfig]);
 
+
   if (isLoading) {
     return (
       <div className="p-8 text-center">
@@ -112,12 +143,21 @@ const StudyTable = () => {
         <h1 className="text-2xl font-bold">All Studies</h1>
         <p className="text-gray-600 mt-1">Browse all DICOM studies across all collections</p>
       </div>
-      <TableFilters
-        filters={filters}
-        onChange={handleFilterChange}
-        onClear={clearFilters}
-        modalities={modalities}
-      />
+      <div className="mb-4 flex items-center gap-4">
+        <TableFilters
+          filters={filters}
+          onChange={handleFilterChange}
+          onClear={clearFilters}
+          modalities={modalities}
+        />
+        <ColumnSelector
+          availableFields={availableFields}
+          selectedFields={selectedColumns}
+          onChange={setSelectedColumns}
+          buttonLabel={availableFields.length === 0 ? 'Loading...' : 'Select Columns'}
+          disabled={availableFields.length === 0}
+        />
+      </div>
       <div className="bg-white shadow-md rounded-lg overflow-hidden">
         <div className="px-6 py-4 bg-gray-50 border-b">
           <h2 className="text-lg font-semibold">Studies ({total})</h2>
@@ -127,41 +167,11 @@ const StudyTable = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th></th>
-                <SortableHeader
-                  field="patient_id"
-                  currentDirection={getSortDirection('patient_id')}
-                  onSort={handleSort}
-                >
-                  Patient ID
-                </SortableHeader>
-                <SortableHeader
-                  field="study_date"
-                  currentDirection={getSortDirection('study_date')}
-                  onSort={handleSort}
-                >
-                  Study Date
-                </SortableHeader>
-                <SortableHeader
-                  field="modality"
-                  currentDirection={getSortDirection('modality')}
-                  onSort={handleSort}
-                >
-                  Modality
-                </SortableHeader>
-                <SortableHeader
-                  field="series_count"
-                  currentDirection={getSortDirection('series_count')}
-                  onSort={handleSort}
-                >
-                  Series Count
-                </SortableHeader>
-                <SortableHeader
-                  field="study_description"
-                  currentDirection={getSortDirection('study_description')}
-                  onSort={handleSort}
-                >
-                  Study Description
-                </SortableHeader>
+                {selectedColumns.map((field) => (
+                  <th key={field} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {field.replace(/_/g, ' ')}
+                  </th>
+                ))}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -179,6 +189,7 @@ const StudyTable = () => {
                     onToggleExpand={() => toggleExpand(studyId)}
                     onViewDetails={() => openDetails('Study Details', study)}
                     onViewSeriesDetails={openSeriesDetails}
+                    selectedColumns={selectedColumns}
                   />
                 );
               })}
