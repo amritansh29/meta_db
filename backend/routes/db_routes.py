@@ -7,6 +7,8 @@ from bson import ObjectId
 import traceback
 from fastapi.responses import JSONResponse
 from pymongo import MongoClient
+import logging
+logger = logging.getLogger(__name__)
 
 MODEL_MAP = {
     'studies': StudyModel,
