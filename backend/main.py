@@ -2,8 +2,9 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from services.db_service import connect_to_mongo, close_mongo_connection
-from routes.db_routes import router
+from backend.services.db_service import connect_to_mongo, close_mongo_connection
+from backend.routes.db_routes import db_router
+from backend.routes.llm_routes import llm_router
 
 # Configure logging globally
 logging.basicConfig(
@@ -35,4 +36,5 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-app.include_router(router)
+app.include_router(db_router)
+app.include_router(llm_router)

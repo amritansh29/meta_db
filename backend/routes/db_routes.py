@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body, Query
 from pymongo.errors import PyMongoError
-from models.models import ResearcherModel, CollectionModel, StudyModel, SeriesModel, InstanceModel
-from services.db_service import get_db
+from backend.models.models import ResearcherModel, CollectionModel, StudyModel, SeriesModel, InstanceModel
+from backend.services.db_service import get_db
 from datetime import datetime, timezone
 from bson import ObjectId
 import traceback
@@ -17,9 +17,9 @@ MODEL_MAP = {
     # Add more as needed
 }
 
-router = APIRouter()
+db_router = APIRouter()
 
-@router.post(
+@db_router.post(
     "/researchers",
     status_code=status.HTTP_201_CREATED,
     response_model=dict,
@@ -49,7 +49,7 @@ async def create_researcher(
         )
     
 
-@router.post(
+@db_router.post(
     "/collections",
     status_code=status.HTTP_201_CREATED,
     response_model=dict,
@@ -75,7 +75,7 @@ async def create_collection(
             detail="Database insertion error"
         )
 
-@router.get(
+@db_router.get(
     "/collections/{collection_id}",
     response_model=CollectionModel,
     summary="Get a collection by ID",
@@ -93,7 +93,7 @@ async def get_collection(collection_id: str, db=Depends(get_db)):
         )
     
 
-@router.post(
+@db_router.post(
     "/studies",
     status_code=status.HTTP_201_CREATED,
     response_model=dict,
@@ -133,7 +133,7 @@ async def create_study(study: StudyModel, db=Depends(get_db)):
         )
 
 
-@router.get(
+@db_router.get(
     "/studies/{study_id}",
     response_model=StudyModel,
     summary="Get a study by ID"
@@ -149,7 +149,7 @@ async def get_study(study_id: str, db=Depends(get_db)):
 
 
 
-@router.post(
+@db_router.post(
     "/series",
     status_code=status.HTTP_201_CREATED,
     response_model=dict,
@@ -192,7 +192,7 @@ async def create_series(series: SeriesModel, db=Depends(get_db)):
             detail="Database error during series insertion"
         )
 
-@router.get(
+@db_router.get(
     "/series/{series_id}",
     response_model=SeriesModel,
     summary="Get a DICOM series by ID"
@@ -207,7 +207,7 @@ async def get_series(series_id: str, db=Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
     
 
-@router.post(
+@db_router.post(
     "/instances",
     status_code=status.HTTP_201_CREATED,
     response_model=dict,
@@ -242,7 +242,7 @@ async def create_instance(instance: InstanceModel, db=Depends(get_db)):
             detail="Database error during instance insertion"
         )
 
-@router.get(
+@db_router.get(
     "/instances/{instance_id}",
     response_model=InstanceModel,
     summary="Get a DICOM instance by ID"
@@ -284,7 +284,7 @@ def convert_object_ids(query):
                 convert_object_ids(v)
     return query
 
-@router.post("/query", summary="Query studies/series/instances/collections")
+@db_router.post("/query", summary="Query studies/series/instances/collections")
 async def run_query(
     collection: str = Body(..., description="studies, series, instances, or collections"),
     query: dict = Body(default={}, description="MongoDB-style query"),
@@ -322,7 +322,7 @@ async def run_query(
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Exception: {str(e)}"})
 
-@router.get('/available-fields')
+@db_router.get('/available-fields')
 async def get_available_fields(
     collection: str = Query(..., description='Collection name'),
     collection_id: str = Query(None, description='Optional collection ID'),
@@ -332,21 +332,9 @@ async def get_available_fields(
         raise HTTPException(status_code=400, detail='Invalid collection name')
     model = MODEL_MAP[collection]
     standard_fields = list(model.model_fields.keys())
+    return {"fields": standard_fields}
 
-    query = {}
-    if collection_id:
-        query['collection_id'] = collection_id
-    cursor = db[collection].find(query, {'metadata': 1})
-    metadata_keys = set()
-    async for doc in cursor:
-        metadata_keys.update(doc.get('metadata', {}).keys())
-        if len(metadata_keys) > 100:  # Limit to 100 unique keys for performance
-            break
-
-    all_fields = list(set(standard_fields) | metadata_keys)
-    return {"fields": all_fields}
-
-@router.get('/available-metadata-fields')
+@db_router.get('/available-metadata-fields')
 async def get_available_metadata_fields(
     collection: str = Query(..., description='Collection name'),
     collection_id: str = Query(None, description='Optional collection ID'),

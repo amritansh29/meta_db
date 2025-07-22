@@ -1,5 +1,4 @@
 import os
-import openai
 from typing import Dict, Any
 from ..base import BaseLLMClient
 
