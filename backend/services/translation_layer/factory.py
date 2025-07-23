@@ -5,7 +5,7 @@ from .models.gemma_ollama import GemmaOllamaLLMClient
 # from .models.local import LocalLLMClient  
 
 def get_llm_client() -> BaseLLMClient:
-    backend = os.getenv("LLM_BACKEND", "openai").lower()
+    backend = os.getenv("LLM_BACKEND", "gemma_ollama").lower()
     if backend == "openai":
         return OpenAILLMClient()
     elif backend == "gemma_ollama":
