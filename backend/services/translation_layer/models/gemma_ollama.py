@@ -4,6 +4,7 @@ import httpx
 from ..base import BaseLLMClient
 from ..utils.prompts import build_prompt
 from ..utils.parser import extract_json
+from backend.services.db_service import get_db
 
 class GemmaOllamaLLMClient(BaseLLMClient):
     def __init__(self, base_url: str = "", model: str = ""):
@@ -11,7 +12,7 @@ class GemmaOllamaLLMClient(BaseLLMClient):
         self.model = model or os.getenv("OLLAMA_MODEL", "gemma3:12b")
 
     async def translate(self, user_query: str) -> Dict[str, Any]:
-        prompt = build_prompt(user_query)
+        prompt = await build_prompt(user_query, get_db())
         url = f"{self.base_url}/api/generate"
         payload = {
             "model": self.model,

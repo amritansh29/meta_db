@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 MODEL_MAP = {
     'studies': StudyModel,
-    # 'series': SeriesModel,
-    # 'instances': InstanceModel,
+    'series': SeriesModel,
+    'instances': InstanceModel,
     # Add more as needed
 }
 
