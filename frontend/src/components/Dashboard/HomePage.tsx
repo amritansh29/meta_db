@@ -2,19 +2,34 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import RawMongoQueryCard from '../Common/RawMongoQueryCard';
 import SearchBar from '../Common/SearchBar';
+import { llmApi } from '../../services/api';
 
 const HomePage = () => {
   const [showRawQuery, setShowRawQuery] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [defaultCollection, setDefaultCollection] = useState<string | undefined>();
+  const [defaultQuery, setDefaultQuery] = useState<object | undefined>();
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSearchSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: Implement search logic or trigger modal
-    alert(`Search: ${searchValue}`);
+    setSearchLoading(true);
+    setSearchError(null);
+    try {
+      const { collection, query } = await llmApi.translateToMongoQuery(searchValue);
+      setDefaultCollection(collection);
+      setDefaultQuery(query);
+      setShowRawQuery(true);
+    } catch (err: any) {
+      setSearchError('Failed to translate query: ' + (err.message || 'Unknown error'));
+    } finally {
+      setSearchLoading(false);
+    }
   };
 
   return (
@@ -77,6 +92,8 @@ const HomePage = () => {
               onSubmit={handleSearchSubmit}
               placeholder="Search studies, series, or instances..."
             />
+            {searchLoading && <div className="text-blue-600 mt-2">Translating query...</div>}
+            {searchError && <div className="text-red-600 mt-2">{searchError}</div>}
           </div>
           <div className="text-sm text-gray-500">
             Start by exploring your DICOM collections, studies, series, or instances
@@ -126,7 +143,12 @@ const HomePage = () => {
             Raw Mongo Query
           </button>
         </div>
-        <RawMongoQueryCard open={showRawQuery} onClose={() => setShowRawQuery(false)} />
+        <RawMongoQueryCard
+          open={showRawQuery}
+          onClose={() => setShowRawQuery(false)}
+          defaultCollection={defaultCollection}
+          defaultQuery={defaultQuery}
+        />
       </div>
     </div>
   );

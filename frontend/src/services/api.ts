@@ -249,6 +249,24 @@ export const queryApi = {
   }, 
 };
 
+// LLM API
+export const llmApi = {
+  async translateToMongoQuery(userQuery: string): Promise<{ collection: string; query: object }> {
+    const response = await apiCall<{ mongo_query: Record<string, any> }>(
+      '/llm/translate',
+      {
+        method: 'POST',
+        body: JSON.stringify({ user_query: userQuery }),
+      }
+    );
+    // The backend returns { mongo_query: { collection: { ...query... } } }
+    const mongoQuery = response.mongo_query;
+    const collection = Object.keys(mongoQuery)[0];
+    const query = mongoQuery[collection];
+    return { collection, query };
+  },
+};
+
 // Main API export
 export const api = {
   studies: studiesApi,

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import RawMongoQueryCard from './RawMongoQueryCard';
 import SearchBar from './SearchBar';
+import { llmApi } from '../../services/api';
 
 function extractIdFromPath(pathname: string, key: string): string | undefined {
   const match = pathname.match(new RegExp(`/${key}/([^/]+)`));
@@ -69,6 +70,8 @@ const Header = () => {
   const [queryDefaults, setQueryDefaults] = useState<{ defaultCollection?: string; defaultQuery?: object }>({});
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [searchValue, setSearchValue] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -89,11 +92,20 @@ const Header = () => {
     setSearchValue(e.target.value);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSearchSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: Implement search logic
-    alert(`Search: ${searchValue}`);
-    setShowSearchModal(false);
+    setSearchLoading(true);
+    setSearchError(null);
+    try {
+      const { collection, query } = await llmApi.translateToMongoQuery(searchValue);
+      setQueryDefaults({ defaultCollection: collection, defaultQuery: query });
+      setShowRawQuery(true);
+      setShowSearchModal(false);
+    } catch (err: any) {
+      setSearchError('Failed to translate query: ' + (err.message || 'Unknown error'));
+    } finally {
+      setSearchLoading(false);
+    }
   };
 
   return (
@@ -182,6 +194,8 @@ const Header = () => {
               placeholder="Search studies, series, or instances..."
               autoFocus
             />
+            {searchLoading && <div className="text-blue-600 mt-2">Translating query...</div>}
+            {searchError && <div className="text-red-600 mt-2">{searchError}</div>}
           </div>
         </div>
       )}
