@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from backend.services.translation_layer.factory import get_llm_client
+from ..services.translation_layer.factory import get_llm_client
 from backend.services.translation_layer.utils.validators import validate_user_query, validate_mongo_query
 from backend.services.translation_layer.utils.parser import extract_json
-from ..services.db_service import get_db
+from backend.services.db_service import get_db
 
 llm_router = APIRouter()
 
